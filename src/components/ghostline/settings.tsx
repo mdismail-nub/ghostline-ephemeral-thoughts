@@ -279,7 +279,7 @@ export function ProfilePage() {
               own.map((p) => <PostCard key={p.id} post={p} />)
             ) : (
               <EmptyState
-                title="Nothing left behind. Yet."
+                title="Your little corner is waiting."
                 description="Your current posts will appear here until their moment has passed."
                 action={() => setCompose(true)}
               />

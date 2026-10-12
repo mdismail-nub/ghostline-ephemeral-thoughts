@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useGhost } from "./store";
 import { topics, validBody, PRIVACY_NOTICE } from "@/lib/services/mock";
+import { discoveryTopics } from "@/lib/topic-catalog";
 import { GhostMark } from "./icons";
 export function Composer({
   expanded = false,
@@ -31,6 +32,7 @@ export function Composer({
       className={`composer ${expanded ? "composer-expanded" : ""}`}
       aria-label="Create a text post"
     >
+      {!expanded && <h2 className="composer-greeting">What’s on your mind today?</h2>}
       <div className="composer-writing">
         <GhostMark className="avatar lavender" />
         <div className="min-w-0 flex-1">
@@ -42,7 +44,7 @@ export function Composer({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={280}
-            placeholder="What’s on your mind?"
+             placeholder="Drop a thought into the universe…"
             rows={expanded ? 6 : 2}
           />
           {expanded && (
@@ -55,7 +57,7 @@ export function Composer({
           <span className="sr-only">Post topic</span>
           <select value={topic} onChange={(e) => setTopic(e.target.value)}>
             <option value="">Add a topic</option>
-            {topics.map((t) => (
+            {discoveryTopics.map((t) => (
               <option key={t.name}>{t.name}</option>
             ))}
           </select>
@@ -87,7 +89,7 @@ export function ComposeDialog() {
   return (
     <Dialog open={compose} onOpenChange={setCompose}>
       <DialogContent className="compose-dialog">
-        <DialogTitle>Leave a thought, not a footprint.</DialogTitle>
+        <DialogTitle>A little thought, a little connection.</DialogTitle>
         <DialogDescription>
           Text only. Up to 280 characters. Available for 24 hours in this preview.
         </DialogDescription>

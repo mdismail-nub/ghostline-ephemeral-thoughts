@@ -36,6 +36,7 @@ import { GhostMark, TopicIcon } from "./icons";
 import { ComposeDialog } from "./composer";
 import { Onboarding } from "./onboarding";
 import { topics } from "@/lib/services/mock";
+import emptyArt from "@/assets/cozy-thought.jpg";
 import type { ReactNode } from "react";
 export function Layout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
@@ -308,12 +309,12 @@ export function EmptyState({
 }) {
   return (
     <div className="empty-state">
-      <MessageCircle />
+      <img className="empty-illustration" src={emptyArt} width={1024} height={1024} loading="lazy" alt="A friendly ghost with a little thought to share" />
       <h2>{title}</h2>
       <p>{description}</p>
       {action && (
         <Button onClick={action}>
-          Start a conversation
+          Drop a thought
           <Plus />
         </Button>
       )}
