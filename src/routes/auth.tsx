@@ -1,0 +1,11 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { AuthPage } from "@/components/ghostline/auth";
+import { pageHead } from "@/lib/page-head";
+export const Route = createFileRoute("/auth")({
+  head: () =>
+    pageHead(
+      "Sign in",
+      "Sign-in interface preview for Ghostline. Your public identity remains pseudonymous.",
+    ),
+  component: AuthPage,
+});
