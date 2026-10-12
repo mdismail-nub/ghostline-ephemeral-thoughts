@@ -8,3 +8,9 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Ghostline architecture
+- Keep all content and identity interactions in the isolated in-memory mock service and GhostProvider until Cloud integration; browser storage stores only onboarding and appearance preferences, never authoritative post data.
+- Use shared Ghostline components with semantic CSS tokens for every route so light, dark, and system appearance stay consistent.
+- Every public content route declares its own pageHead metadata; keep the home feed at `/` and use TanStack routes for discovery and post details.
+- Filter unavailable content centrally and recheck parent expiration when mutating replies or reactions; prototype filtering is not production deletion enforcement.
