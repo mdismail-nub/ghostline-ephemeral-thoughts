@@ -3,7 +3,7 @@ import { ArrowUpRight, Clock3, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useGhost } from "./store";
-import { topics, validBody } from "@/lib/services/mock";
+import { topics, validBody, PRIVACY_NOTICE } from "@/lib/services/mock";
 import { GhostMark } from "./icons";
 export function Composer({
   expanded = false,
@@ -78,6 +78,7 @@ export function Composer({
         <Clock3 size={13} />
         <span>A little moment. Gone in 24 hours.</span>
       </div>
+      <p className="composer-privacy">{PRIVACY_NOTICE}</p>
     </section>
   );
 }

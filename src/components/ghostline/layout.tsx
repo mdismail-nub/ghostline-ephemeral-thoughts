@@ -172,7 +172,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   className={`sidebar-link sidebar-topic ${topic === t.name ? "active" : ""}`}
                   asChild
                 >
-                  <Link to="/" onClick={() => setTopic(t.name)}>
+                  <Link to="/" activeProps={{ className: "" }} onClick={() => setTopic(t.name)}>
                     <span className={`topic-dot ${t.tone}`} />
                     {t.name}
                   </Link>

@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { ArrowRight, Clock3, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useGhost } from "./store";
 import art from "@/assets/conversation.png";
+import fading from "@/assets/fading.png";
+import privacy from "@/assets/privacy.png";
 const slides = [
   {
     title: "Say what you think.",
@@ -34,21 +36,11 @@ export function Onboarding() {
       <DialogContent className="onboarding-dialog">
         <div className={`onboard-art onboard-step-${step}`}>
           <img
-            src={art}
+            src={step === 1 ? fading : step === 2 ? privacy : art}
             width={1024}
             height={1024}
-            alt="Soft lavender and mint conversation bubbles"
+            alt={step === 1 ? "A clock beside a fading speech bubble" : step === 2 ? "A mint privacy shield protecting text cards" : "Soft lavender and mint conversation bubbles"}
           />
-          {step === 1 && (
-            <span className="onboard-emblem">
-              <Clock3 />
-            </span>
-          )}
-          {step === 2 && (
-            <span className="onboard-emblem">
-              <ShieldCheck />
-            </span>
-          )}
           <span className="onboard-wordmark">ghostline</span>
         </div>
         <div className="onboard-copy">
