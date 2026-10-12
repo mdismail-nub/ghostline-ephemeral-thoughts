@@ -519,6 +519,13 @@
   border: none;
   border-radius: 0;
 }
+.composer-privacy {
+  color: var(--muted-foreground);
+  font-size: 9px;
+  line-height: 1.7;
+  padding: 0 0 13px;
+  text-align: center;
+}
 .composer-expanded textarea {
   min-height: 180px;
 }
@@ -1459,7 +1466,13 @@
     width: 10px;
   }
   .post-top button {
-    width: 18px;
+    width: 24px;
+    position: relative;
+  }
+  .post-top button::after {
+    content: "";
+    position: absolute;
+    inset: -7px -3px;
   }
   .post-body {
     font-size: 13px;
@@ -1474,6 +1487,12 @@
   }
   .post-footer .reaction {
     font-size: 10px;
+    position: relative;
+  }
+  .post-footer .reaction::after {
+    content: "";
+    position: absolute;
+    inset: -5px -7px;
   }
   .mobile-nav {
     display: grid;
