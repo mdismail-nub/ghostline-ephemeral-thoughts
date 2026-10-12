@@ -3,22 +3,22 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useGhost } from "./store";
-import art from "@/assets/conversation.png";
-import fading from "@/assets/fading.png";
-import privacy from "@/assets/privacy.png";
+import art from "@/assets/cozy-thought.jpg";
+import fading from "@/assets/cozy-time.jpg";
+import privacy from "@/assets/cozy-community.jpg";
 const slides = [
   {
-    title: "Say what you think.",
+    title: "Your thoughts, your little corner.",
     description:
       "A thought doesn’t need a real name. Share yours under a pseudonym, and find people who get it.",
   },
   {
-    title: "Conversations that fade.",
+    title: "Here today, gone tomorrow.",
     description:
       "Your posts and replies become unavailable after 24 hours. A little less permanence. A little more freedom.",
   },
   {
-    title: "Your space, your rules.",
+    title: "Meet people, stay mysterious.",
     description:
       "Just text and genuine conversations. Choose your topics, block identities, and report what doesn’t belong.",
   },
@@ -39,7 +39,7 @@ export function Onboarding() {
             src={step === 1 ? fading : step === 2 ? privacy : art}
             width={1024}
             height={1024}
-            alt={step === 1 ? "A clock beside a fading speech bubble" : step === 2 ? "A mint privacy shield protecting text cards" : "Soft lavender and mint conversation bubbles"}
+            alt={step === 1 ? "A smiling clock with fading messages and tiny stars" : step === 2 ? "Friendly anonymous ghosts exchanging text bubbles" : "A little ghost holding a mint speech bubble"}
           />
           <span className="onboard-wordmark">ghostline</span>
         </div>

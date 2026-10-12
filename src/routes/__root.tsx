@@ -95,13 +95,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700&family=Nunito:wght@500;600;700;800;900&display=swap",
       },
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/ghostline-icon.svg", type: "image/svg+xml" },
+      { rel: "apple-touch-icon", href: "/ghostline-app-icon.png" },
     ],
   }),
   shellComponent: RootShell,

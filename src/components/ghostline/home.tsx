@@ -11,8 +11,7 @@ import { useGhost } from "./store";
 import { Composer } from "./composer";
 import { PostCard } from "./post-card";
 import { PageHeading, Rightbar, EmptyState } from "./layout";
-import { topics } from "@/lib/services/mock";
-import art from "@/assets/conversation.png";
+import { discoveryTopics as topics } from "@/lib/topic-catalog";
 export function HomeFeed() {
   const { posts, ready, topic, setTopic, setCompose } = useGhost();
   const [tab, setTab] = useState("Recent");
@@ -28,26 +27,10 @@ export function HomeFeed() {
     <>
       <main className="feed-column">
         <PageHeading
-          title="Your feed"
-          subtitle="Fresh thoughts. Real conversations. No lasting footprints."
+          title="Your little corner."
+          subtitle="A few fresh thoughts. A little good company."
           live
         />
-        <section className="welcome-banner">
-          <div>
-            <p className="eyebrow">WELCOME TO GHOSTLINE</p>
-            <h2>
-              Less permanence.
-              <br />
-              More you.
-            </h2>
-            <p>
-              Say it freely. Find your people.
-              <br />
-              Let the moment be a moment.
-            </p>
-          </div>
-          <img src={art} width={1024} height={1024} alt="Lavender and mint conversation bubbles" />
-        </section>
         <Composer />
         <div className="feed-tabs" role="tablist" aria-label="Feed order">
           {["Recent", "Trending"].map((t) => (
@@ -93,7 +76,7 @@ export function HomeFeed() {
             filtered.map((p) => <PostCard key={p.id} post={p} />)
           ) : (
             <EmptyState
-              title="It’s quiet here, for now."
+              title="Nothing floating around here yet."
               description="No active thoughts in this topic. Leave the first one, or wander somewhere new."
               action={() => setCompose(true)}
             />

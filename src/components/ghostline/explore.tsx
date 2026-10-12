@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useGhost } from "./store";
 import { TopicIcon } from "./icons";
 import { PageHeading, EmptyState, DailyQuestion } from "./layout";
-import { topics } from "@/lib/services/mock";
+import { discoveryTopics as topics } from "@/lib/topic-catalog";
 export function Explore({ communities = false }: { communities?: boolean }) {
   const { posts, joined, join, setTopic } = useGhost();
   const [search, setSearch] = useState("");
@@ -20,7 +20,7 @@ export function Explore({ communities = false }: { communities?: boolean }) {
   return (
     <main className="discovery-main">
       <PageHeading
-        title={communities ? "Find your people." : "A little curiosity goes a long way."}
+         title={communities ? "Find your people." : "Follow your curiosity."}
         subtitle={
           communities
             ? "Shared interests. Fresh perspectives. No public membership lists."
@@ -47,14 +47,14 @@ export function Explore({ communities = false }: { communities?: boolean }) {
           {selected.map((t) => {
             const count = posts.filter((p) => p.topic === t.name).length;
             return (
-              <article key={t.name} className="topic-card">
+              <article key={t.name} className={`topic-card topic-card-${t.tone}`}>
                 <span className={`topic-icon ${t.tone}`}>
                   <TopicIcon name={t.name} />
                 </span>
                 <h2>{t.name}</h2>
                 <p>{t.description}</p>
                 <div className="topic-card-bottom">
-                  <span>
+                  <span className={count ? "discussion-live" : ""}>
                     {count
                       ? `${count} active discussion${count === 1 ? "" : "s"}`
                       : "No discussions yet"}
@@ -70,7 +70,7 @@ export function Explore({ communities = false }: { communities?: boolean }) {
                   ) : (
                     <Button variant="ghost" asChild>
                       <Link to="/" onClick={() => setTopic(t.name)}>
-                        Wander in
+                        Explore
                         <ArrowUpRight />
                       </Link>
                     </Button>

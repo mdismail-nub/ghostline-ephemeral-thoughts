@@ -14,3 +14,4 @@
 - Use shared Ghostline components with semantic CSS tokens for every route so light, dark, and system appearance stay consistent.
 - Every public content route declares its own pageHead metadata; keep the home feed at `/` and use TanStack routes for discovery and post details.
 - Filter unavailable content centrally and recheck parent expiration when mutating replies or reactions; prototype filtering is not production deletion enforcement.
+- Keep additional discovery categories in the presentation topic catalog; reuse it for composing and filtering without changing content availability rules.

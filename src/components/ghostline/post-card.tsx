@@ -84,7 +84,8 @@ export function PostCard({ post, detail = false }: { post: Post; detail?: boolea
               ) : (
                 <HandHeart />
               )}
-              {r.count}
+               <span className="reaction-name">{r.kind === "heart" ? "Support" : "Relatable"}</span>
+               {r.count}
             </Button>
           ))}
           <Button variant="ghost" size="sm" className="reaction" asChild>
@@ -95,7 +96,6 @@ export function PostCard({ post, detail = false }: { post: Post; detail?: boolea
             </Link>
           </Button>
         </div>
-        <span className="post-footer-note">Just here for a moment</span>
       </div>
     </article>
   );

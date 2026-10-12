@@ -97,7 +97,7 @@ export function PostDetail({ id }: { id: string }) {
           </>
         ) : (
           <EmptyState
-            title="This moment has passed."
+            title="This conversation has drifted away."
             description="The post has expired, was blocked, or isn’t available in this preview. Its content and replies are no longer shown."
           />
         )}
