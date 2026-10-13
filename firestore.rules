@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidPost(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.alias is string && data.alias.size() <= 64
+        && data.creatorId is string && data.creatorId.size() <= 128
+        && data.body is string && data.body.size() > 0 && data.body.size() <= 280
+        && data.topic is string && data.topic.size() <= 64
+        && data.createdAt is number
+        && data.expiresAt is number
+        && data.expiresAt >= data.createdAt
+        && (!('tone' in data) || (data.tone is string && data.tone.size() <= 32))
+        && (!('isEdited' in data) || data.isEdited is bool)
+        && (!('deleted' in data) || data.deleted is bool)
+        && (!('reportCount' in data) || data.reportCount is number)
+        && (!('reports' in data) || (data.reports is list && data.reports.size() <= 50))
+        && (!('reactions' in data) || (data.reactions is list && data.reactions.size() <= 10))
+        && (!('replies' in data) || (data.replies is list && data.replies.size() <= 100));
+    }
+
+    function isValidAlert(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.creatorId is string && data.creatorId.size() <= 128
+        && data.postId is string && data.postId.size() <= 128
+        && data.postSnippet is string && data.postSnippet.size() <= 100
+        && data.reason is string && data.reason.size() <= 128
+        && data.createdAt is number
+        && (!('read' in data) || data.read is bool);
+    }
+
+    match /posts/{postId} {
+      allow get, list: if true;
+
+      allow create: if isSignedIn()
+        && isValidId(postId)
+        && isValidPost(request.resource.data)
+        && request.resource.data.creatorId == request.auth.uid
+        && (!('reportCount' in request.resource.data) || request.resource.data.reportCount == 0);
+
+      allow update: if isSignedIn()
+        && isValidId(postId)
+        && isValidPost(request.resource.data)
+        && (
+          (resource.data.creatorId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['body', 'topic', 'isEdited'])) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'replies']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'reports', 'deleted'])
+        );
+
+      allow delete: if isSignedIn()
+        && isValidId(postId)
+        && (
+          resource.data.creatorId == request.auth.uid ||
+          (resource.data.reportCount != null && resource.data.reportCount >= 4)
+        );
+    }
+
+    match /alerts/{alertId} {
+      allow get, list: if isSignedIn()
+        && (resource == null || resource.data.creatorId == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && isValidId(alertId)
+        && isValidAlert(request.resource.data);
+
+      allow update: if isSignedIn()
+        && isValidId(alertId)
+        && resource.data.creatorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+
+      allow delete: if isSignedIn()
+        && isValidId(alertId)
+        && resource.data.creatorId == request.auth.uid;
+    }
+  }
+}

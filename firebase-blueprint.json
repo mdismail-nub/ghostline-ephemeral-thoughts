@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "Post": {
+      "title": "Post",
+      "description": "An ephemeral anonymous thought on Unsaid",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "alias": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "body": { "type": "string", "maxLength": 280 },
+        "topic": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "expiresAt": { "type": "number" },
+        "reactions": { "type": "array" },
+        "replies": { "type": "array" },
+        "tone": { "type": "string" },
+        "isEdited": { "type": "boolean" },
+        "reportCount": { "type": "number" },
+        "reports": { "type": "array" },
+        "deleted": { "type": "boolean" }
+      },
+      "required": ["id", "alias", "creatorId", "body", "topic", "createdAt", "expiresAt"]
+    },
+    "Alert": {
+      "title": "Alert",
+      "description": "Privacy and moderation alert for post creators",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "postId": { "type": "string" },
+        "postSnippet": { "type": "string" },
+        "reason": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "read": { "type": "boolean" }
+      },
+      "required": ["id", "creatorId", "postId", "postSnippet", "reason", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/posts/{postId}": {
+      "schema": "Post",
+      "description": "Shared anonymous ephemeral thoughts expiring in 24 hours"
+    },
+    "/alerts/{alertId}": {
+      "schema": "Alert",
+      "description": "Creator-facing moderation and privacy notifications"
+    }
+  }
+}

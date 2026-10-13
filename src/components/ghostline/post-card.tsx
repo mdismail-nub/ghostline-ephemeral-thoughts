@@ -570,6 +570,7 @@ export function PostCard({ post, detail = false }: PostCardProps) {
         open={reportOpen}
         onOpenChange={setReportOpen}
         targetAlias={post.alias}
+        postId={post.id}
         itemType="post"
       />
 

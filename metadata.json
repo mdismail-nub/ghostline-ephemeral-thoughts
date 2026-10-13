@@ -2,7 +2,5 @@
   "name": "Unsaid",
   "description": "Some things are easier to say anonymously. An anonymous, text-first social platform where people can share thoughts, feelings, and questions without making real-world identity the focus.",
   "permissions": [],
-  "capabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -17,6 +17,8 @@ import {
   TrendingUp,
   Sparkles,
   Plus,
+  Bell,
+  ShieldAlert,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -35,6 +37,7 @@ import { useGhost } from "./store";
 import { UnsaidMark, TopicIcon } from "./icons";
 import { ComposeDialog } from "./composer";
 import { Onboarding } from "./onboarding";
+import { CreatorAlertDialog } from "./creator-alert-dialog";
 import { discoveryTopics } from "@/lib/topic-catalog";
 import emptyArt from "@/assets/conversation.png";
 const destinations = [
@@ -44,8 +47,20 @@ const destinations = [
 ];
 export function Layout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  const { theme, setTheme, alias, setCompose, setOnboard, posts } = useGhost();
+  const {
+    theme,
+    setTheme,
+    alias,
+    setCompose,
+    setOnboard,
+    posts,
+    alerts,
+    unreadAlertCount,
+    activeAlertModal,
+    setActiveAlertModal,
+  } = useGhost();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const results = query.trim()
     ? posts.filter((p) =>
@@ -84,6 +99,27 @@ export function Layout({ children }: { children: ReactNode }) {
           >
             <Search />
           </Button>
+
+          {/* Privacy & Moderation Alerts Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative alerts-trigger hover:bg-accent/80 rounded-xl"
+            aria-label="Moderation and Privacy alerts"
+            title="Privacy Alerts"
+            onClick={() => {
+              setAlertsOpen(true);
+              if (activeAlertModal) setActiveAlertModal(null);
+            }}
+          >
+            <Bell className="w-4 h-4 text-foreground/80" />
+            {unreadAlertCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-background animate-pulse">
+                {unreadAlertCount}
+              </span>
+            )}
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -137,6 +173,15 @@ export function Layout({ children }: { children: ReactNode }) {
                   <Settings />
                   Settings & privacy
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setAlertsOpen(true)} className="cursor-pointer">
+                <ShieldAlert className="w-4 h-4 text-rose-500" />
+                <span>Privacy alerts</span>
+                {unreadAlertCount > 0 && (
+                  <span className="ml-auto text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded-full">
+                    {unreadAlertCount}
+                  </span>
+                )}
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setOnboard(true)} className="cursor-pointer">
                 <Sparkles className="text-primary" />
@@ -252,6 +297,15 @@ export function Layout({ children }: { children: ReactNode }) {
       </Dialog>
       <ComposeDialog />
       <Onboarding />
+      <CreatorAlertDialog
+        open={alertsOpen || Boolean(activeAlertModal)}
+        onOpenChange={(open) => {
+          setAlertsOpen(open);
+          if (!open && activeAlertModal) {
+            setActiveAlertModal(null);
+          }
+        }}
+      />
       <Toaster position="bottom-right" />
     </div>
   );

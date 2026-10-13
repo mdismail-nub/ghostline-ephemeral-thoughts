@@ -54,6 +54,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "firebase": "^13.0.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",
@@ -72,6 +73,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@firebase/eslint-plugin-security-rules": "^0.0.2",
     "@lovable.dev/vite-tanstack-config": "2.25.3",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",

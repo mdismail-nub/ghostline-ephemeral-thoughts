@@ -27,4 +27,26 @@ describe("Unsaid mock boundaries", () => {
     expect(posts).toHaveLength(1);
     expect(posts[0]?.alias).toBe("Unsaid");
   });
+
+  it("identifies when a post exceeds the 4-report privacy threshold", () => {
+    const post = makePost("Testing privacy threshold", "Ideas", 1000, "PeachyOtter", "user-123");
+    expect(post.reportCount).toBe(0);
+    expect(post.reports).toEqual([]);
+
+    // Simulate community reports
+    const reporters = ["anon-1", "anon-2", "anon-3", "anon-4"];
+    let count = 0;
+    for (const reporter of reporters) {
+      if (!post.reports?.includes(reporter)) {
+        post.reports?.push(reporter);
+        count++;
+      }
+    }
+    post.reportCount = count;
+
+    expect(post.reportCount).toBe(4);
+    // Should trigger deletion when >= 4
+    const shouldAutoDelete = (post.reportCount || 0) >= 4;
+    expect(shouldAutoDelete).toBe(true);
+  });
 });

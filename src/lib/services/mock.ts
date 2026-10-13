@@ -45,10 +45,17 @@ export function isActive(post: Post, now: number) {
 export function validBody(body: string) {
   return body.trim().length > 0 && body.length <= 280;
 }
-export function makePost(body: string, topic: string, now: number, alias = "PookieBear"): Post {
+export function makePost(
+  body: string,
+  topic: string,
+  now: number,
+  alias = "PookieBear",
+  creatorId = "",
+): Post {
   return {
     id: crypto.randomUUID(),
     alias,
+    creatorId,
     body: body.trim(),
     topic,
     createdAt: now,
@@ -59,6 +66,9 @@ export function makePost(body: string, topic: string, now: number, alias = "Pook
     ],
     replies: [],
     tone: "lavender",
+    reportCount: 0,
+    reports: [],
+    deleted: false,
   };
 }
 export function seedPosts(now: number): Post[] {
@@ -76,6 +86,7 @@ export function seedPosts(now: number): Post[] {
   return rows.map((r, i) => ({
     id: `post-${i + 1}`,
     alias: String(r[0]),
+    creatorId: "unsaid-system",
     body: String(r[1]),
     topic: String(r[2]),
     createdAt: now - Number(r[3]) * 60000,
@@ -103,6 +114,9 @@ export function seedPosts(now: number): Post[] {
       },
     ],
     tone: String(r[6]),
+    reportCount: 0,
+    reports: [],
+    deleted: false,
   }));
 }
 export function relativeTime(created: number, now: number) {

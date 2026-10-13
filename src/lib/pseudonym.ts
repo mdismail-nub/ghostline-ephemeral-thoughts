@@ -241,3 +241,26 @@ export function getStoredOrNewAlias(existingAliases: string[] = []): string {
   }
   return fresh;
 }
+
+export function getStoredOrNewCreatorId(): string {
+  if (typeof window === "undefined") {
+    return "anon-" + Math.random().toString(36).substring(2, 12);
+  }
+
+  try {
+    const saved = localStorage.getItem("unsaid-creator-id");
+    if (saved && saved.length > 5) {
+      return saved;
+    }
+  } catch {
+    // Ignore localStorage access issues
+  }
+
+  const fresh = "anon-" + crypto.randomUUID();
+  try {
+    localStorage.setItem("unsaid-creator-id", fresh);
+  } catch {
+    // Ignore
+  }
+  return fresh;
+}
