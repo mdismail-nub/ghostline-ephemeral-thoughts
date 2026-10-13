@@ -12,11 +12,14 @@ export function WelcomeBanner({ onSparkPrompt }: { onSparkPrompt?: () => void })
 
   useEffect(() => {
     // Check if user previously dismissed the feed banner
-    const isDismissed = localStorage.getItem("ghostline-feed-banner-dismissed") === "yes";
+    const isDismissed =
+      localStorage.getItem("unsaid-feed-banner-dismissed") === "yes" ||
+      localStorage.getItem("ghostline-feed-banner-dismissed") === "yes";
     setDismissed(isDismissed);
   }, []);
 
   const handleDismiss = () => {
+    localStorage.setItem("unsaid-feed-banner-dismissed", "yes");
     localStorage.setItem("ghostline-feed-banner-dismissed", "yes");
     setDismissed(true);
   };
@@ -32,7 +35,7 @@ export function WelcomeBanner({ onSparkPrompt }: { onSparkPrompt?: () => void })
   return (
     <div
       role="region"
-      aria-label="Welcome to Ghostline"
+      aria-label="Welcome to Unsaid"
       className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-accent/40 to-muted/80 border border-primary/25 p-4 sm:p-5 mb-5 shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-top-2"
     >
       {/* Decorative background blur glow */}
@@ -54,7 +57,7 @@ export function WelcomeBanner({ onSparkPrompt }: { onSparkPrompt?: () => void })
         <div className="shrink-0 size-12 rounded-2xl bg-primary/15 border border-primary/25 p-1 flex items-center justify-center shadow-xs overflow-hidden">
           <img
             src={conversationIcon}
-            alt="Ghostline thought icon"
+            alt="Unsaid thought icon"
             className="size-full object-contain"
           />
         </div>
@@ -62,21 +65,20 @@ export function WelcomeBanner({ onSparkPrompt }: { onSparkPrompt?: () => void })
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-primary px-2 py-0.5 rounded-full bg-primary/15">
-              Welcome to Ghostline
+              Welcome to Unsaid
             </span>
             <span className="text-xs text-muted-foreground font-medium hidden sm:inline">
-              Safe, playful & cozy
+              Safe, anonymous & cozy
             </span>
           </div>
 
           <h3 className="text-base sm:text-lg font-bold text-foreground">
-            Say what’s on your mind. Here for 24 hours, then gently gone.
+            Some things are easier to say anonymously.
           </h3>
 
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xl leading-relaxed">
-            No real identities, no pressure for likes, no permanent archive. Share authentic
-            thoughts under a cute pseudonym, design aesthetic quote cards, and watch them fade into
-            the ether.
+            Your words. No names. Share authentic thoughts, late-night reflections, and questions
+            under a cute pseudonym, design aesthetic quote cards, and connect in a gentle space.
           </p>
         </div>
       </div>

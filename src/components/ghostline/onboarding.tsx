@@ -10,23 +10,23 @@ const slides = [
   {
     title: "Your thoughts, your little corner.",
     description:
-      "A thought doesn’t need a real name. Share yours under a pseudonym, and find people who get it.",
+      "A thought doesn’t need a real name. Share yours under a cute pseudonym, and find people who get it.",
     icon: conversation,
-    alt: "Ghostline conversation and thoughts icon",
+    alt: "Unsaid conversation and thoughts icon",
   },
   {
     title: "Here today, gone tomorrow.",
     description:
       "Your posts and replies become unavailable after 24 hours. A little less permanence. A little more freedom.",
     icon: fading,
-    alt: "Ghostline 24-hour fading and ephemeral timer icon",
+    alt: "Unsaid 24-hour fading and timer icon",
   },
   {
     title: "Meet people, stay mysterious.",
     description:
       "Just text and genuine conversations. Choose your topics and decide who belongs in your space.",
     icon: privacy,
-    alt: "Ghostline privacy, pseudonym and safe community icon",
+    alt: "Unsaid privacy, pseudonym and safe community icon",
   },
 ];
 export function Onboarding() {
@@ -51,10 +51,10 @@ export function Onboarding() {
             src={slides[step]?.icon ?? conversation}
             width={1024}
             height={1024}
-            alt={slides[step]?.alt ?? "Ghostline"}
+            alt={slides[step]?.alt ?? "Unsaid"}
             className="onboard-icon-pack-img"
           />
-          <span className="onboard-wordmark">ghostline</span>
+          <span className="onboard-wordmark">unsaid</span>
         </div>
         <div className="onboard-copy">
           <p className="eyebrow">A little less noise. A little more you.</p>

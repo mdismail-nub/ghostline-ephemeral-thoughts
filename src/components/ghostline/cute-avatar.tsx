@@ -92,7 +92,7 @@ function hashString(str: string): number {
 }
 
 export function getAvatarPalette(alias: string) {
-  const safeAlias = alias || "Ghostie";
+  const safeAlias = alias || "Pookie";
   const h = hashString(safeAlias);
   const p = PALETTES[h % PALETTES.length] ?? PALETTES[0]!;
   // Provide hex/rgb fallbacks for canvas rendering
@@ -120,7 +120,7 @@ export function CuteAvatar({
   showSparkle = true,
 }: CuteAvatarProps) {
   const { palette, motifIndex } = useMemo(() => {
-    const safeAlias = alias || "Ghostie";
+    const safeAlias = alias || "Pookie";
     const h = hashString(safeAlias);
     const p = PALETTES[h % PALETTES.length] ?? PALETTES[0]!;
     const m = (h >> 3) % 7;

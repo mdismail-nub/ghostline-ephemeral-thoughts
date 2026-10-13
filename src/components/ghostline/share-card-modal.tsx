@@ -207,55 +207,44 @@ export function ShareCardModal({ post, isOpen, onClose }: ShareCardModalProps) {
     ctx.fillStyle = theme.textColor;
     ctx.font = `bold ${isLandscape ? 26 : 32}px 'Nunito', 'Inter', sans-serif`;
     ctx.textAlign = "left";
+    // Brand Icon & Name (Unsaid speech bubble & whisper mark)
+    ctx.font = `bold ${isLandscape ? 19 : 22}px 'Plus Jakarta Sans', 'Inter', sans-serif`;
+    ctx.textAlign = "left";
     ctx.textBaseline = "middle";
 
-    // Ghost icon drawing (simplified cute ghost curve)
-    const ghostX = cardX + (isLandscape ? 44 : 60);
-    const ghostY = headerY;
-    const gRadius = isLandscape ? 13 : 16;
+    const markX = cardX + (isLandscape ? 44 : 60);
+    const markY = headerY;
+    const markRadius = isLandscape ? 12 : 15;
+
     ctx.save();
+    // Rounded speech bubble
     ctx.fillStyle = theme.accentColor;
     ctx.beginPath();
-    ctx.arc(ghostX, ghostY - (isLandscape ? 4 : 6), gRadius, Math.PI, 0, false);
-    ctx.lineTo(ghostX + gRadius, ghostY + (isLandscape ? 10 : 12));
-    ctx.quadraticCurveTo(
-      ghostX + (isLandscape ? 8 : 10),
-      ghostY + 5,
-      ghostX + 4,
-      ghostY + (isLandscape ? 10 : 12),
-    );
-    ctx.quadraticCurveTo(ghostX, ghostY + 5, ghostX - 4, ghostY + (isLandscape ? 10 : 12));
-    ctx.quadraticCurveTo(
-      ghostX - (isLandscape ? 8 : 10),
-      ghostY + 5,
-      ghostX - gRadius,
-      ghostY + (isLandscape ? 10 : 12),
-    );
-    ctx.closePath();
+    ctx.arc(markX, markY, markRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Eyes
+    // Cute whisper dots
     ctx.fillStyle = theme.cardBg;
+    const dotSpacing = isLandscape ? 4.5 : 5.5;
+    const dotRadius = isLandscape ? 1.6 : 2;
+    [-dotSpacing, 0, dotSpacing].forEach((offset) => {
+      ctx.beginPath();
+      ctx.arc(markX + offset, markY, dotRadius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Orbiting spark
+    ctx.fillStyle = theme.accentColor;
+    const sparkX = markX + markRadius + (isLandscape ? 3 : 4);
+    const sparkY = markY - markRadius + (isLandscape ? 1 : 2);
     ctx.beginPath();
-    ctx.arc(
-      ghostX - (isLandscape ? 5 : 6),
-      ghostY - (isLandscape ? 4 : 6),
-      isLandscape ? 2.5 : 3,
-      0,
-      Math.PI * 2,
-    );
-    ctx.arc(
-      ghostX + (isLandscape ? 5 : 6),
-      ghostY - (isLandscape ? 4 : 6),
-      isLandscape ? 2.5 : 3,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(sparkX, sparkY, isLandscape ? 2 : 2.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
     // Brand Name
-    ctx.fillText("ghostline", ghostX + (isLandscape ? 26 : 32), headerY);
+    ctx.fillStyle = theme.textColor;
+    ctx.fillText("unsaid", markX + (isLandscape ? 24 : 28), headerY);
 
     // Ephemeral badge (top right)
     const badgeText = "⏳ Fades in 24h";
@@ -474,7 +463,7 @@ export function ShareCardModal({ post, isOpen, onClose }: ShareCardModalProps) {
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
       ctx.fillText(
-        "ghostline.app · safe, cozy & ephemeral",
+        "unsaid.app · your words, no names",
         cardX + cardWidth - (isLandscape ? 44 : 60),
         footerY,
       );
@@ -509,7 +498,7 @@ export function ShareCardModal({ post, isOpen, onClose }: ShareCardModalProps) {
       const dataUrl = canvas.toDataURL("image/png");
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = `ghostline-${post.alias.toLowerCase()}-${post.id.slice(0, 8)}.png`;
+      a.download = `unsaid-${post.alias.toLowerCase()}-${post.id.slice(0, 8)}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -558,7 +547,7 @@ export function ShareCardModal({ post, isOpen, onClose }: ShareCardModalProps) {
   // Actions: Social Direct Shares
   const handleShareTwitter = () => {
     const text = encodeURIComponent(
-      `"${post.body.slice(0, 180)}${post.body.length > 180 ? "…" : ""}" — ${post.alias} on Ghostline\n\nRead & reply before it fades (24h ephemeral):`,
+      `"${post.body.slice(0, 180)}${post.body.length > 180 ? "…" : ""}" — ${post.alias} on Unsaid\n\nSome things are easier to say anonymously:`,
     );
     const url = encodeURIComponent(shareUrl);
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank");
@@ -566,13 +555,13 @@ export function ShareCardModal({ post, isOpen, onClose }: ShareCardModalProps) {
 
   const handleShareWhatsApp = () => {
     const text = encodeURIComponent(
-      `"${post.body}" — ${post.alias} on Ghostline 👻 (Disappears in 24h)\n${shareUrl}`,
+      `"${post.body}" — ${post.alias} on Unsaid ✨ (Your words. No names.)\n${shareUrl}`,
     );
     window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
   };
 
   const handleShareTelegram = () => {
-    const text = encodeURIComponent(`"${post.body}" — ${post.alias} on Ghostline 👻`);
+    const text = encodeURIComponent(`"${post.body}" — ${post.alias} on Unsaid ✨`);
     const url = encodeURIComponent(shareUrl);
     window.open(`https://t.me/share/url?url=${url}&text=${text}`, "_blank");
   };
@@ -581,8 +570,8 @@ export function ShareCardModal({ post, isOpen, onClose }: ShareCardModalProps) {
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: `Ghostline thought by ${post.alias}`,
-          text: `"${post.body}" — ephemeral 24h thought`,
+          title: `Unsaid thought by ${post.alias}`,
+          text: `"${post.body}" — some things are easier to say anonymously`,
           url: shareUrl,
         });
         toast.success("Shared successfully!");

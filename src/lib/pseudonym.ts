@@ -1,4 +1,4 @@
-// Reusable cute pseudonym generator for Ghostline
+// Reusable cute pseudonym generator for Unsaid
 // Combines adorable adjectives, animals, sweets, and whimsical concepts.
 
 const CUTE_ADJECTIVES = [
@@ -140,6 +140,7 @@ const DISALLOWED_WORDS = [
   "admin",
   "root",
   "moderator",
+  "unsaid",
   "ghostline",
   "support",
   "system",
@@ -176,12 +177,12 @@ export function isValidAlias(alias: string): boolean {
 }
 
 /**
- * Generates a cute, memorable pseudonym adhering to Ghostline's cozy tone.
+ * Generates a cute, memorable pseudonym adhering to Unsaid's cozy tone.
  * Patterns:
  * 1. Signature name list selection
  * 2. Adjective + Creature (e.g. SleepyBunny, CozyPanda)
  * 3. Sweet/Food + Whimsical Object/Creature (e.g. MochiCloud, BobaBean, HoneyMochi)
- * 4. Color/Vibe + Creature/Object (e.g. LilacGhost, StarryCloud)
+ * 4. Color/Vibe + Creature/Object (e.g. LilacWhisper, StarryCloud)
  */
 export function generateCutePseudonym(existingAliases: string[] = []): string {
   const existingSet = new Set(existingAliases.map((a) => a.toLowerCase()));
@@ -223,7 +224,7 @@ export function getStoredOrNewAlias(existingAliases: string[] = []): string {
   }
 
   try {
-    const saved = localStorage.getItem("ghostline-alias");
+    const saved = localStorage.getItem("unsaid-alias") || localStorage.getItem("ghostline-alias");
     if (saved && isValidAlias(saved)) {
       return saved;
     }
@@ -233,6 +234,7 @@ export function getStoredOrNewAlias(existingAliases: string[] = []): string {
 
   const fresh = generateCutePseudonym(existingAliases);
   try {
+    localStorage.setItem("unsaid-alias", fresh);
     localStorage.setItem("ghostline-alias", fresh);
   } catch {
     // Ignore

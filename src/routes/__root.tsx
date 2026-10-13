@@ -80,12 +80,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ghostline — A thought, not a footprint" },
-      { name: "description", content: "Pseudonymous text conversations, made for the moment." },
-      { property: "og:title", content: "Ghostline — A thought, not a footprint" },
+      { title: "Unsaid — Some things are easier to say anonymously" },
+      {
+        name: "description",
+        content:
+          "An anonymous, text-first social platform where people can share thoughts, feelings, and questions without making real-world identity the focus. Your words. No names.",
+      },
+      { property: "og:title", content: "Unsaid — Some things are easier to say anonymously" },
       {
         property: "og:description",
-        content: "Pseudonymous text conversations, made for the moment.",
+        content:
+          "Your words. No names. Share thoughts, ask questions, and connect without making real-world identity the focus.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -95,14 +100,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700&family=Nunito:wght@500;600;700;800;900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap",
       },
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/ghostline-icon.svg", type: "image/svg+xml" },
-      { rel: "apple-touch-icon", href: "/ghostline-app-icon.png" },
+      { rel: "icon", href: "/unsaid-icon.svg", type: "image/svg+xml" },
+      { rel: "apple-touch-icon", href: "/unsaid-icon.svg" },
     ],
   }),
   shellComponent: RootShell,

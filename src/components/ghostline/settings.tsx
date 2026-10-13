@@ -248,7 +248,7 @@ export function SettingsPage() {
                   <dt>Identity & external copies</dt>
                   <dd>
                     No permanent account lifecycle is configured. Pseudonyms are not a guarantee of
-                    anonymity, and external copies cannot be removed by Ghostline.
+                    anonymity, and external copies cannot be removed by Unsaid.
                   </dd>
                 </div>
                 <div>
@@ -344,7 +344,9 @@ export function SettingsPage() {
                   <Button
                     variant="ghost"
                     onClick={() => {
+                      localStorage.removeItem("unsaid-feed-banner-dismissed");
                       localStorage.removeItem("ghostline-feed-banner-dismissed");
+                      localStorage.removeItem("unsaid-onboarded");
                       localStorage.removeItem("ghostline-onboarded");
                       toast.success("Feed banner & onboarding restored! Reload or visit Home.");
                     }}

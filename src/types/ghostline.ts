@@ -27,6 +27,7 @@ export interface Post {
   reactions: Reaction[];
   replies: Reply[];
   tone: string;
+  isEdited?: boolean;
 }
 export interface Topic {
   name: string;

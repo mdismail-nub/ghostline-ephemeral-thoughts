@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Heart,
-  HeartCrack,
+  ThumbsDown,
   MessageCircle,
   Clock3,
   MoreHorizontal,
@@ -12,6 +12,8 @@ import {
   Share2,
   Send,
   Sparkles,
+  Pencil,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,13 +24,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import type { Post } from "@/types/ghostline";
+import type { Post, ReactionKind } from "@/types/ghostline";
 import { useGhost } from "./store";
 import { CuteAvatar } from "./cute-avatar";
 import { relativeTime, remainingDetailed, isExpiringSoon, validBody } from "@/lib/services/mock";
 import { ReportDialog } from "./report-dialog";
 import { ReplyItem } from "./reply-item";
 import { ShareCardModal } from "./share-card-modal";
+import { discoveryTopics } from "@/lib/topic-catalog";
 
 interface PostCardProps {
   post: Post;
@@ -36,17 +39,47 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, detail = false }: PostCardProps) {
-  const { now, react, block, setTopic, alias, deletePost, reply } = useGhost();
+  const { now, react, block, setTopic, alias, deletePost, editPost, reply } = useGhost();
   const [inlineOpen, setInlineOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [replyDraft, setReplyDraft] = useState("");
   const [submittingReply, setSubmittingReply] = useState(false);
   const [replyError, setReplyError] = useState("");
+  const [animatingReaction, setAnimatingReaction] = useState<string | null>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDraft, setEditDraft] = useState(post.body);
+  const [editTopic, setEditTopic] = useState(post.topic);
+  const editCharsLeft = 280 - editDraft.length;
+
+  const handleReaction = (kind: ReactionKind) => {
+    setAnimatingReaction(kind);
+    react(post.id, kind);
+    setTimeout(() => {
+      setAnimatingReaction((prev) => (prev === kind ? null : prev));
+    }, 500);
+  };
 
   const isOwner = post.alias === alias;
   const charsLeft = 280 - replyDraft.length;
   const expiringSoon = isExpiringSoon(post.expiresAt, now);
+
+  const handleSaveEdit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!isOwner) {
+      toast.error("You can only edit your own thoughts");
+      return;
+    }
+    if (!validBody(editDraft)) {
+      toast.error("Thought content must be between 1 and 280 characters");
+      return;
+    }
+    const success = editPost(post.id, editDraft, editTopic);
+    if (success) {
+      setIsEditing(false);
+    }
+  };
 
   const handleShare = (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -108,7 +141,10 @@ export function PostCard({ post, detail = false }: PostCardProps) {
               <span className="post-alias">{post.alias}</span>
               {isOwner && <span className="author-badge">You</span>}
             </div>
-            <p className="post-time">{relativeTime(post.createdAt, now)}</p>
+            <p className="post-time">
+              {relativeTime(post.createdAt, now)}
+              {post.isEdited && <span className="ml-1 opacity-75 text-[11px]">· edited</span>}
+            </p>
           </div>
         </div>
 
@@ -142,7 +178,7 @@ export function PostCard({ post, detail = false }: PostCardProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="options-trigger rounded-xl hover:bg-muted"
+                className="options-trigger rounded-lg hover:bg-muted"
                 aria-label={`Options for ${post.alias}'s post`}
               >
                 <MoreHorizontal size={16} />
@@ -163,13 +199,26 @@ export function PostCard({ post, detail = false }: PostCardProps) {
               <DropdownMenuSeparator />
 
               {isOwner ? (
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer font-medium"
-                  onSelect={() => deletePost(post.id)}
-                >
-                  <Trash2 className="w-3.5 h-3.5 mr-2" />
-                  Delete thought
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem
+                    className="cursor-pointer font-medium text-foreground hover:text-primary"
+                    onSelect={() => {
+                      setEditDraft(post.body);
+                      setEditTopic(post.topic);
+                      setIsEditing(true);
+                    }}
+                  >
+                    <Pencil className="w-3.5 h-3.5 mr-2" />
+                    Edit thought
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer font-medium"
+                    onSelect={() => deletePost(post.id)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-2" />
+                    Delete thought
+                  </DropdownMenuItem>
+                </>
               ) : (
                 <>
                   <DropdownMenuItem
@@ -193,63 +242,154 @@ export function PostCard({ post, detail = false }: PostCardProps) {
         </div>
       </div>
 
-      {/* Card Body */}
-      {detail ? (
-        <p className="post-body text-base sm:text-[16px] leading-relaxed text-foreground select-text">
-          {post.body}
-        </p>
-      ) : (
-        <Link
-          className="post-body post-link block text-base sm:text-[15px] leading-relaxed text-foreground hover:text-primary-ink transition-colors"
-          to="/post/$postId"
-          params={{ postId: post.id }}
+      {/* Card Body & Edit Form */}
+      {isEditing ? (
+        <form
+          onSubmit={handleSaveEdit}
+          className="my-3 space-y-3 p-3.5 rounded-xl border border-primary/25 bg-muted/30 animate-in fade-in-50 duration-150"
         >
-          {post.body}
-        </Link>
-      )}
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-foreground flex items-center gap-1.5">
+              <Pencil className="size-3.5 text-primary" />
+              <span>Editing thought</span>
+            </span>
+            <span
+              className={`tabular-nums font-medium ${
+                editCharsLeft < 20 ? "text-destructive font-bold" : "text-muted-foreground"
+              }`}
+            >
+              {editCharsLeft} left
+            </span>
+          </div>
 
-      {/* Topic Tag Pill */}
-      {post.topic && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="inline-flex items-center gap-1.5 h-7 px-2.5 py-1 text-xs font-medium rounded-full bg-accent/70 hover:bg-accent text-primary-ink border border-primary/10 transition-colors mb-3"
-          onClick={() => setTopic(post.topic)}
-        >
-          <span>#{post.topic.toLowerCase()}</span>
-        </Button>
+          <textarea
+            value={editDraft}
+            onChange={(e) => setEditDraft(e.target.value)}
+            rows={3}
+            maxLength={280}
+            className="w-full text-[15px] p-3 rounded-lg border border-border bg-input-bg text-foreground resize-vertical focus:outline-none focus:ring-2 focus:ring-primary/20 leading-relaxed"
+            placeholder="Edit your thought…"
+            autoFocus
+          />
+
+          <div className="flex items-center justify-between gap-2 flex-wrap pt-0.5">
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span>Topic:</span>
+              <select
+                value={editTopic}
+                onChange={(e) => setEditTopic(e.target.value)}
+                className="text-xs py-1 px-2.5 rounded-md border border-border bg-card text-foreground font-medium cursor-pointer"
+              >
+                {discoveryTopics.map((t) => (
+                  <option key={t.name} value={t.name}>
+                    #{t.name.toLowerCase()}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setEditDraft(post.body);
+                  setEditTopic(post.topic);
+                  setIsEditing(false);
+                }}
+                className="h-8 px-3 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={
+                  !validBody(editDraft) ||
+                  (editDraft.trim() === post.body && editTopic === post.topic)
+                }
+                className="h-8 px-3.5 text-xs font-semibold gap-1.5"
+              >
+                <Check className="size-3.5" />
+                <span>Save</span>
+              </Button>
+            </div>
+          </div>
+        </form>
+      ) : (
+        <>
+          {detail ? (
+            <p className="post-body text-[15px] sm:text-[15.5px] leading-relaxed text-foreground select-text">
+              {post.body}
+            </p>
+          ) : (
+            <Link
+              className="post-body post-link block text-[15px] sm:text-[15.5px] leading-relaxed text-foreground hover:text-primary-ink transition-colors"
+              to="/post/$postId"
+              params={{ postId: post.id }}
+            >
+              {post.body}
+            </Link>
+          )}
+
+          {/* Topic Tag Pill */}
+          {post.topic && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="inline-flex items-center gap-1.5 h-6.5 px-2.5 py-0.5 text-xs font-medium rounded-full bg-accent/80 hover:bg-accent text-primary-ink border border-primary/10 transition-colors mb-3"
+              onClick={() => setTopic(post.topic)}
+            >
+              <span>#{post.topic.toLowerCase()}</span>
+            </Button>
+          )}
+        </>
       )}
 
       {/* Card Footer */}
       <div className="post-footer">
-        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-nowrap shrink-0 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap shrink-0 overflow-x-auto no-scrollbar">
           {/* Reaction Buttons */}
           {post.reactions.map((r) => {
             const isLove = r.kind === "love" || r.kind === "heart";
+            const isAnim = animatingReaction === r.kind;
             return (
               <Button
                 key={r.kind}
                 variant="ghost"
                 size="sm"
-                className={`reaction rounded-xl gap-1 sm:gap-1.5 px-2 sm:px-2.5 transition-all duration-200 ${
-                  isLove ? "reaction-love" : "reaction-dislike"
-                } ${r.selected ? "selected font-semibold scale-102" : "hover:bg-muted"}`}
+                className={`reaction group/btn rounded-lg gap-1.5 px-2.5 h-8.5 transition-all duration-200 active:scale-95 ${
+                  isLove
+                    ? r.selected
+                      ? "reaction-love selected font-semibold"
+                      : "text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10"
+                    : r.selected
+                      ? "reaction-dislike selected font-semibold"
+                      : "text-muted-foreground hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-500/10"
+                }`}
                 aria-label={`${isLove ? "Love" : "Dislike"} post by ${post.alias}`}
                 aria-pressed={r.selected}
-                onClick={() => react(post.id, r.kind)}
+                onClick={() => handleReaction(r.kind)}
               >
                 {isLove ? (
                   <Heart
                     className={`w-4 h-4 transition-transform duration-200 ${
-                      r.selected ? "fill-current text-rose-500 scale-110" : "text-muted-foreground"
+                      isAnim ? "animate-reaction-love-pop" : ""
+                    } ${
+                      r.selected
+                        ? "fill-rose-500 text-rose-500 scale-105"
+                        : "text-muted-foreground/80 group-hover/btn:text-rose-600"
                     }`}
                   />
                 ) : (
-                  <HeartCrack
+                  <ThumbsDown
                     className={`w-4 h-4 transition-transform duration-200 ${
+                      isAnim ? "animate-reaction-dislike-pop" : ""
+                    } ${
                       r.selected
-                        ? "fill-current text-slate-500 dark:text-slate-300 scale-110"
-                        : "text-muted-foreground"
+                        ? "fill-slate-700 dark:fill-slate-300 text-slate-800 dark:text-slate-200 scale-105"
+                        : "text-muted-foreground/80 group-hover/btn:text-slate-800 dark:group-hover/btn:text-slate-200"
                     }`}
                   />
                 )}
@@ -265,10 +405,10 @@ export function PostCard({ post, detail = false }: PostCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            className={`reaction rounded-xl gap-1 sm:gap-1.5 px-2 sm:px-2.5 transition-all duration-200 ${
+            className={`reaction rounded-lg gap-1.5 px-2.5 h-8.5 transition-all duration-200 active:scale-95 ${
               inlineOpen
-                ? "bg-accent text-primary-ink font-semibold"
-                : "hover:bg-muted text-muted-foreground"
+                ? "bg-accent text-primary-ink font-semibold border border-primary/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
             aria-label={`Replies to ${post.alias}'s post`}
             onClick={toggleReply}
@@ -286,7 +426,7 @@ export function PostCard({ post, detail = false }: PostCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="reaction rounded-xl gap-1 sm:gap-1.5 px-2 sm:px-2.5 text-muted-foreground hover:bg-muted transition-colors"
+            className="reaction rounded-lg gap-1.5 px-2.5 h-8.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 active:scale-95"
             aria-label="Share thought link"
             onClick={handleShare}
             title="Share viral thought card"

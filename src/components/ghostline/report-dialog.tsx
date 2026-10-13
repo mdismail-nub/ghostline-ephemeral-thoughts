@@ -45,7 +45,7 @@ export function ReportDialog({
       onOpenChange(false);
       setDetails("");
       toast.success("Report submitted", {
-        description: `Thank you for keeping Ghostline cozy and safe.`,
+        description: `Thank you for keeping Unsaid cozy and safe.`,
       });
     }, 400);
   };

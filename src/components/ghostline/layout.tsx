@@ -32,7 +32,7 @@ import {
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { useGhost } from "./store";
-import { GhostMark, TopicIcon } from "./icons";
+import { UnsaidMark, TopicIcon } from "./icons";
 import { ComposeDialog } from "./composer";
 import { Onboarding } from "./onboarding";
 import { discoveryTopics } from "@/lib/topic-catalog";
@@ -55,9 +55,9 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <Link to="/" className="brand" aria-label="Ghostline home">
-          <GhostMark />
-          <span>ghostline</span>
+        <Link to="/" className="brand" aria-label="Unsaid home">
+          <UnsaidMark />
+          <span>unsaid</span>
         </Link>
         <nav className="nav-links" aria-label="Main navigation">
           {destinations.map((n) => (
@@ -78,7 +78,7 @@ export function Layout({ children }: { children: ReactNode }) {
             variant="ghost"
             size="icon"
             className="search-trigger"
-            aria-label="Search Ghostline"
+            aria-label="Search Unsaid"
             title="Search"
             onClick={() => setSearchOpen(true)}
           >
@@ -195,8 +195,8 @@ export function Layout({ children }: { children: ReactNode }) {
       </div>
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
         <DialogContent className="search-dialog">
-          <DialogTitle>Search Ghostline</DialogTitle>
-          <DialogDescription>Find a topic or an available conversation.</DialogDescription>
+          <DialogTitle>Search Unsaid</DialogTitle>
+          <DialogDescription>Find a topic or an anonymous conversation.</DialogDescription>
           <label className="search-field">
             <Search />
             <span className="sr-only">Search active content</span>
@@ -297,7 +297,7 @@ export function Rightbar() {
       </section>
       <div className="right-footer">
         <Link to="/settings">Privacy & preferences</Link>
-        <p>Ghostline · Session-only preview</p>
+        <p>Unsaid · Some things are easier to say anonymously</p>
       </div>
     </aside>
   );
@@ -334,7 +334,7 @@ export function EmptyState({
         width={1024}
         height={1024}
         loading="lazy"
-        alt="A friendly ghost with a little thought to share"
+        alt="A cozy thought to share"
       />
       <h2>{title}</h2>
       <p>{description}</p>

@@ -2,8 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PostDetail } from "@/components/ghostline/detail";
 import { pageHead } from "@/lib/page-head";
 export const Route = createFileRoute("/post/$postId")({
-  head: () =>
-    pageHead("Conversation", "A text-only conversation, available for a moment on Ghostline."),
+  head: () => pageHead("Conversation", "A text-only conversation on Unsaid. Your words. No names."),
   component: Conversation,
 });
 function Conversation() {

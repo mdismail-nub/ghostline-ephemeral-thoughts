@@ -33,6 +33,7 @@ interface Store {
   finishOnboarding: () => void;
   clearIdentity: () => void;
   deletePost: (id: string) => boolean;
+  editPost: (id: string, newBody: string, newTopic?: string) => boolean;
   deleteReply: (postId: string, replyId: string) => boolean;
 }
 
@@ -60,8 +61,12 @@ export function GhostProvider({ children }: { children: ReactNode }) {
     const storedAlias = getStoredOrNewAlias();
     setAliasState(storedAlias);
 
-    setOnboard(localStorage.getItem("ghostline-onboarded") !== "yes");
-    const savedTheme = localStorage.getItem("ghostline-theme");
+    setOnboard(
+      localStorage.getItem("unsaid-onboarded") !== "yes" &&
+        localStorage.getItem("ghostline-onboarded") !== "yes",
+    );
+    const savedTheme =
+      localStorage.getItem("unsaid-theme") || localStorage.getItem("ghostline-theme");
     if (savedTheme === "dark" || savedTheme === "light" || savedTheme === "system") {
       setTheme(savedTheme);
     }
@@ -79,7 +84,10 @@ export function GhostProvider({ children }: { children: ReactNode }) {
       );
     apply();
     mq.addEventListener("change", apply);
-    if (ready) localStorage.setItem("ghostline-theme", theme);
+    if (ready) {
+      localStorage.setItem("unsaid-theme", theme);
+      localStorage.setItem("ghostline-theme", theme);
+    }
     return () => mq.removeEventListener("change", apply);
   }, [theme, ready]);
 
@@ -91,6 +99,7 @@ export function GhostProvider({ children }: { children: ReactNode }) {
     }
     setAliasState(trimmed);
     try {
+      localStorage.setItem("unsaid-alias", trimmed);
       localStorage.setItem("ghostline-alias", trimmed);
     } catch {
       // Ignore storage error
@@ -106,6 +115,7 @@ export function GhostProvider({ children }: { children: ReactNode }) {
   };
 
   const finishOnboarding = () => {
+    localStorage.setItem("unsaid-onboarded", "yes");
     localStorage.setItem("ghostline-onboarded", "yes");
     setOnboard(false);
   };
@@ -234,6 +244,38 @@ export function GhostProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
+  const editPost = (id: string, newBody: string, newTopic?: string) => {
+    const target = posts.find((p) => p.id === id);
+    if (!target) return false;
+    if (target.alias !== alias) {
+      toast.error("You can only edit your own thoughts");
+      return false;
+    }
+    if (!validBody(newBody)) {
+      toast.error("Thought content must be between 1 and 280 characters");
+      return false;
+    }
+    const time = Date.now();
+    if (!isActive(target, time)) {
+      toast.error("This thought has already expired and cannot be edited");
+      return false;
+    }
+    setPosts((p) =>
+      p.map((x) =>
+        x.id === id
+          ? {
+              ...x,
+              body: newBody.trim(),
+              ...(newTopic ? { topic: newTopic } : {}),
+              isEdited: true,
+            }
+          : x,
+      ),
+    );
+    toast.success("Thought updated");
+    return true;
+  };
+
   const deleteReply = (postId: string, replyId: string) => {
     const targetPost = posts.find((p) => p.id === postId);
     if (!targetPost) return false;
@@ -281,6 +323,7 @@ export function GhostProvider({ children }: { children: ReactNode }) {
         finishOnboarding,
         clearIdentity,
         deletePost,
+        editPost,
         deleteReply,
       }}
     >

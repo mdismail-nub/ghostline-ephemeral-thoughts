@@ -5,7 +5,7 @@ export const Route = createFileRoute("/auth")({
   head: () =>
     pageHead(
       "Sign in",
-      "Sign in to Ghostline. Your public identity remains pseudonymous and private.",
+      "Sign in to Unsaid. Your public identity remains pseudonymous and private.",
     ),
   component: AuthPage,
 });

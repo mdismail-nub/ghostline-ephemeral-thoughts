@@ -1,5 +1,5 @@
 export function pageHead(title: string, description: string) {
-  const fullTitle = `${title} · Ghostline`;
+  const fullTitle = `${title} · Unsaid`;
   return {
     meta: [
       { title: fullTitle },

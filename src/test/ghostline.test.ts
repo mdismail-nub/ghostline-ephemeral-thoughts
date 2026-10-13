@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { isActive, makePost, validBody, seedPosts, remaining } from "@/lib/services/mock";
-describe("Ghostline mock boundaries", () => {
+describe("Unsaid mock boundaries", () => {
   it("accepts only nonempty thoughts with at most 280 characters", () => {
     expect(validBody("   ")).toBe(false);
     expect(validBody("a".repeat(280))).toBe(true);
@@ -21,5 +21,10 @@ describe("Ghostline mock boundaries", () => {
   });
   it("does not generate negative countdowns", () => {
     expect(remaining(0, 10000)).toBe("0h 0m");
+  });
+  it("initializes with exactly one welcome message post", () => {
+    const posts = seedPosts(Date.now());
+    expect(posts).toHaveLength(1);
+    expect(posts[0]?.alias).toBe("Unsaid");
   });
 });
