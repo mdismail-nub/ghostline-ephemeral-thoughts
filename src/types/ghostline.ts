@@ -14,6 +14,8 @@ export interface Reply {
   alias: string;
   body: string;
   createdAt: number;
+  likes?: number;
+  liked?: boolean;
 }
 export interface Post {
   id: string;

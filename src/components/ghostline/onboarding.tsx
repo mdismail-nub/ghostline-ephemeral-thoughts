@@ -1,31 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useGhost } from "./store";
-import art from "@/assets/cozy-thought.jpg";
-import fading from "@/assets/cozy-time.jpg";
-import privacy from "@/assets/cozy-community.jpg";
+import conversation from "@/assets/conversation.png";
+import fading from "@/assets/fading.png";
+import privacy from "@/assets/privacy.png";
 const slides = [
   {
     title: "Your thoughts, your little corner.",
     description:
       "A thought doesn’t need a real name. Share yours under a pseudonym, and find people who get it.",
+    icon: conversation,
+    alt: "Ghostline conversation and thoughts icon",
   },
   {
     title: "Here today, gone tomorrow.",
     description:
       "Your posts and replies become unavailable after 24 hours. A little less permanence. A little more freedom.",
+    icon: fading,
+    alt: "Ghostline 24-hour fading and ephemeral timer icon",
   },
   {
     title: "Meet people, stay mysterious.",
     description:
       "Just text and genuine conversations. Choose your topics and decide who belongs in your space.",
+    icon: privacy,
+    alt: "Ghostline privacy, pseudonym and safe community icon",
   },
 ];
 export function Onboarding() {
   const { onboard, finishOnboarding } = useGhost();
   const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (onboard) {
+      setStep(0);
+    }
+  }, [onboard]);
   return (
     <Dialog
       open={onboard}
@@ -36,16 +48,11 @@ export function Onboarding() {
       <DialogContent className="onboarding-dialog">
         <div className={`onboard-art onboard-step-${step}`}>
           <img
-            src={step === 1 ? fading : step === 2 ? privacy : art}
+            src={slides[step]?.icon ?? conversation}
             width={1024}
             height={1024}
-            alt={
-              step === 1
-                ? "A smiling clock with fading messages and tiny stars"
-                : step === 2
-                  ? "Friendly anonymous ghosts exchanging text bubbles"
-                  : "A little ghost holding a mint speech bubble"
-            }
+            alt={slides[step]?.alt ?? "Ghostline"}
+            className="onboard-icon-pack-img"
           />
           <span className="onboard-wordmark">ghostline</span>
         </div>

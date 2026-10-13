@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useGhost } from "./store";
 import { TopicIcon } from "./icons";
 import { PageHeading, EmptyState, DailyQuestion } from "./layout";
+import { PostCard } from "./post-card";
 import { discoveryTopics as topics } from "@/lib/topic-catalog";
 export function Explore({ communities = false }: { communities?: boolean }) {
   const { posts, joined, join, setTopic } = useGhost();
@@ -91,18 +92,7 @@ export function Explore({ communities = false }: { communities?: boolean }) {
           <h2 className="subheading">Active conversations</h2>
           <div className="post-list">
             {matching.map((p) => (
-              <Link
-                key={p.id}
-                to="/post/$postId"
-                params={{ postId: p.id }}
-                className="popular-conversation"
-              >
-                <h3 className="text-xs font-semibold">
-                  {p.alias} · {p.topic}
-                </h3>
-                <p>{p.body}</p>
-                <small>{p.replies.length} replies · Available for a little longer</small>
-              </Link>
+              <PostCard key={p.id} post={p} />
             ))}
           </div>
         </>
@@ -114,7 +104,7 @@ export function Explore({ communities = false }: { communities?: boolean }) {
             <h2 className="section-title">
               <Flame />A conversation worth joining
             </h2>
-            {posts.length > 0 ? (
+            {posts.length > 0 && posts[0] ? (
               <Link to="/post/$postId" params={{ postId: posts[0].id }}>
                 <p className="mt-3 text-sm line-clamp-3">{posts[0].body}</p>
                 <small className="mt-2 block text-xs text-muted-foreground">

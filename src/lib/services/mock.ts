@@ -45,7 +45,7 @@ export function isActive(post: Post, now: number) {
 export function validBody(body: string) {
   return body.trim().length > 0 && body.length <= 280;
 }
-export function makePost(body: string, topic: string, now: number, alias = "QuietFox42"): Post {
+export function makePost(body: string, topic: string, now: number, alias = "PookieBear"): Post {
   return {
     id: crypto.randomUUID(),
     alias,
@@ -64,7 +64,7 @@ export function makePost(body: string, topic: string, now: number, alias = "Quie
 export function seedPosts(now: number): Post[] {
   const rows = [
     [
-      "GentleOrbit",
+      "PookieBear",
       "I went for a walk without my phone today. No music, no podcast, no destination. Just me and the world.\n\nI forgot how nice that feels.",
       "Life",
       18,
@@ -73,7 +73,7 @@ export function seedPosts(now: number): Post[] {
       "green",
     ],
     [
-      "PixelWanderer",
+      "MochiBun",
       "Unpopular opinion: not every hobby needs to become a side hustle. Sometimes making something just because it makes you happy is enough.",
       "Ideas",
       46,
@@ -82,7 +82,7 @@ export function seedPosts(now: number): Post[] {
       "lavender",
     ],
     [
-      "SleepyComet",
+      "SleepyBoba",
       "Finally fixed a bug I’ve been staring at for three days.\n\nIt was a missing comma. I’m going outside.",
       "Programming",
       72,
@@ -91,7 +91,7 @@ export function seedPosts(now: number): Post[] {
       "blue",
     ],
     [
-      "PaperMoon",
+      "PeachyPuff",
       "Does anyone else feel like university is 10% learning and 90% learning how to be a person?",
       "University",
       115,
@@ -100,7 +100,7 @@ export function seedPosts(now: number): Post[] {
       "amber",
     ],
     [
-      "SoftEcho",
+      "CozyPanda",
       "Somewhere in the world, someone is having the best day of their life. I like thinking about that.",
       "Life",
       185,
@@ -109,7 +109,7 @@ export function seedPosts(now: number): Post[] {
       "pink",
     ],
     [
-      "CuriousCloud",
+      "TinyCloud",
       "What’s one piece of technology you wish didn’t exist? Mine is the “seen” receipt. Let me reply in peace.",
       "Technology",
       242,
@@ -135,13 +135,18 @@ export function seedPosts(now: number): Post[] {
     ],
     replies: Array.from({ length: Number(r[5]) }, (_, j) => ({
       id: `reply-${i}-${j}`,
-      alias: ["MellowFinch", "WanderingLeaf", "LittleNova"][j % 3] ?? "MellowFinch",
+      alias:
+        ["HoneyMochi", "LilacBun", "MoonieBun", "StarryPookie", "BerryBoo", "Cloudie"][j % 6] ??
+        "HoneyMochi",
       body:
         [
           "Needed to read this today. Thank you for putting it into words.",
           "Honestly, same. There’s something really comforting about that.",
           "A little reminder to slow down. I’m taking this with me today.",
-        ][j % 3] ?? "A thought worth sharing.",
+          "This made my day a little softer. Appreciate you sharing!",
+          "So true. It feels like we forget to breathe sometimes.",
+          "Sending warm cozy energy your way!",
+        ][j % 6] ?? "A thought worth sharing.",
       createdAt: now - (Number(r[3]) - j - 1) * 60000,
     })),
     tone: String(r[6]),
@@ -154,4 +159,19 @@ export function relativeTime(created: number, now: number) {
 export function remaining(expires: number, now: number) {
   const m = Math.max(0, Math.ceil((expires - now) / 60000));
   return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
+export function remainingDetailed(expires: number, now: number) {
+  const diff = Math.max(0, expires - now);
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds}s`;
+  }
+  return `${minutes}m ${seconds}s`;
+}
+
+export function isExpiringSoon(expires: number, now: number) {
+  return expires - now < 7200000; // less than 2 hours remaining
 }

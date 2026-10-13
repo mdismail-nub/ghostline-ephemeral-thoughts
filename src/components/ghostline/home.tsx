@@ -10,6 +10,7 @@ import {
 import { useGhost } from "./store";
 import { Composer } from "./composer";
 import { PostCard } from "./post-card";
+import { WelcomeBanner } from "./welcome-banner";
 import { PageHeading, Rightbar, EmptyState } from "./layout";
 import { discoveryTopics as topics } from "@/lib/topic-catalog";
 export function HomeFeed() {
@@ -26,11 +27,8 @@ export function HomeFeed() {
   return (
     <>
       <main className="feed-column">
-        <PageHeading
-          title="Hello, thoughtful you."
-          subtitle="What’s on your mind today?"
-          live
-        />
+        <PageHeading title="Hello, thoughtful you." subtitle="What’s on your mind today?" live />
+        <WelcomeBanner />
         <Composer />
         <div className="feed-tabs" role="tablist" aria-label="Feed order">
           {["Recent", "Trending"].map((t) => (
