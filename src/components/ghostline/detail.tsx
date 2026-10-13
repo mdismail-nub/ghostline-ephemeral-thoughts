@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Send, Trash2, Clock3, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGhost } from "./store";
@@ -32,8 +32,8 @@ export function PostDetail({ id }: { id: string }) {
         {post ? (
           <>
             <PageHeading
-              title="A moment, shared."
-              subtitle="Conversations don't have to last forever to be meaningful."
+              title="Conversation"
+              subtitle="A thought and the people it brings together."
             />
 
             <PostCard post={post} detail />
@@ -45,10 +45,7 @@ export function PostDetail({ id }: { id: string }) {
                   {post.replies.length} {post.replies.length === 1 ? "reply" : "replies"}
                 </span>
               </h2>
-              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Clock3 className="size-3" />
-                All replies dissolve with this post
-              </span>
+
             </div>
 
             {post.replies.length ? (
@@ -92,7 +89,7 @@ export function PostDetail({ id }: { id: string }) {
             ) : (
               <EmptyState
                 title="Be the first to reply."
-                description="Share a kind response. All replies dissolve automatically with the original thought."
+                description="Add your perspective to the conversation."
               />
             )}
 
@@ -108,7 +105,7 @@ export function PostDetail({ id }: { id: string }) {
                 }
               }}
             >
-              <div className="flex items-center justify-between mb-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 mb-3">
                 <label htmlFor="reply-input" className="text-sm font-semibold">
                   Reply as <span className="text-primary font-bold">{alias}</span>
                 </label>
@@ -130,10 +127,10 @@ export function PostDetail({ id }: { id: string }) {
                 rows={3}
               />
 
-              <div className="flex items-center justify-between mt-3">
+              <div className="reply-composer-actions">
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                   <Clock3 className="size-3 shrink-0" />
-                  <span>Replies disappear with this post after 24 hours.</span>
+                  <span>Replies expire with this post.</span>
                 </p>
                 <Button type="submit" disabled={!validBody(body)} size="sm">
                   <span>Send reply</span>
