@@ -20,7 +20,7 @@ const slides = [
   {
     title: "Meet people, stay mysterious.",
     description:
-      "Just text and genuine conversations. Choose your topics, block identities, and report what doesn’t belong.",
+      "Just text and genuine conversations. Choose your topics and decide who belongs in your space.",
   },
 ];
 export function Onboarding() {
@@ -82,7 +82,7 @@ export function Onboarding() {
             </Button>
           </div>
           <p className="prototype-note">
-            All conversations dissolve and disappear automatically after 24 hours.
+            Session-only preview. No account or permanent storage is connected.
           </p>
         </div>
       </DialogContent>

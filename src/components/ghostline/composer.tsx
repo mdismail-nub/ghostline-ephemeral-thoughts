@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Sparkles, Clock3, Tag, ChevronDown, Send } from "lucide-react";
+import { Sparkles, Clock3, Tag, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useGhost } from "./store";
-import { validBody } from "@/lib/services/mock";
+import { validBody, PRIVACY_NOTICE } from "@/lib/services/mock";
 import { discoveryTopics } from "@/lib/topic-catalog";
 import { GhostMark } from "./icons";
 
@@ -18,16 +18,17 @@ export function Composer({
   const [body, setBody] = useState("");
   const [topic, setTopic] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   async function submit() {
-    if (!validBody(body)) return;
+    if (busy || !validBody(body)) return;
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 200));
+    setError("");
     if (publish(body, topic || "Random")) {
       setBody("");
       setTopic("");
       onDone?.();
-    }
+    } else { setError("Your post wasn’t added. Check the text and try again."); }
     setBusy(false);
   }
 
@@ -43,15 +44,15 @@ export function Composer({
           <GhostMark className="avatar lavender" />
           <div className="min-w-0">
             <span className="composer-user-alias">{alias}</span>
-            <span className="composer-sub-alias">Anonymous author</span>
+            <span className="composer-sub-alias">Session-only preview</span>
           </div>
         </div>
         <span
           className="composer-time-pill"
-          title="Every thought dissolves strictly after 24 hours"
+          title="Your post expires 24 hours after publishing"
         >
           <Clock3 className="size-3 shrink-0" />
-          <span>Dissolves in 24h</span>
+          <span>Expires in 24h</span>
         </span>
       </div>
 
@@ -65,7 +66,7 @@ export function Composer({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           maxLength={280}
-          placeholder="What's on your mind? Share a quiet thought, confession, or question…"
+          placeholder="Share a thought, question or small win…"
           rows={expanded ? 5 : 3}
         />
       </div>
@@ -79,7 +80,7 @@ export function Composer({
             onChange={(e) => setTopic(e.target.value)}
             aria-label="Select post topic"
           >
-            <option value="">Choose a topic (default: Random)</option>
+            <option value="">Topic: Random</option>
             {discoveryTopics.map((t) => (
               <option key={t.name} value={t.name}>
                 #{t.name.toLowerCase()}
@@ -105,7 +106,7 @@ export function Composer({
               <span>Posting…</span>
             ) : (
               <>
-                <span>Post thought</span>
+                <span>Publish</span>
                 <Sparkles className="size-3.5 ml-1.5" />
               </>
             )}
@@ -113,9 +114,10 @@ export function Composer({
         </div>
       </div>
 
+      {error && <p role="alert" className="text-destructive text-xs mt-3">{error}</p>}
       <div className="composer-footer-notice">
         <Sparkles className="size-3 text-primary shrink-0" />
-        <span>Text only. No permanent footprint. Automatically deleted in 24 hours.</span>
+        <span>{PRIVACY_NOTICE}</span>
       </div>
     </section>
   );
@@ -126,16 +128,16 @@ export function ComposeDialog() {
   return (
     <Dialog open={compose} onOpenChange={setCompose}>
       <DialogContent className="compose-dialog-modal">
-        <DialogTitle className="text-xl font-bold">Share a moment in the stream</DialogTitle>
+        <DialogTitle className="text-xl font-bold">Write a post</DialogTitle>
         <DialogDescription className="text-sm text-muted-foreground">
-          Say what’s on your mind. Everything dissolves automatically in 24 hours.
+          Saved for this open session only.
         </DialogDescription>
         <div className="mt-4">
           <Composer expanded onDone={() => setCompose(false)} />
         </div>
         <div className="flex justify-end mt-2">
           <Button variant="ghost" size="sm" onClick={() => setCompose(false)}>
-            Close
+            Cancel
           </Button>
         </div>
       </DialogContent>

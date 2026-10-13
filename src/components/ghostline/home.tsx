@@ -27,8 +27,8 @@ export function HomeFeed() {
     <>
       <main className="feed-column">
         <PageHeading
-          title="Your little corner."
-          subtitle="A few fresh thoughts. A little good company."
+          title="Hello, thoughtful you."
+          subtitle="What’s on your mind today?"
           live
         />
         <Composer />
@@ -81,7 +81,7 @@ export function HomeFeed() {
                   ? "No thoughts here yet."
                   : `No thoughts in #${topic.toLowerCase()} yet.`
               }
-              description="Everything on Ghostline is deleted automatically after 24 hours. Drop the first thought today!"
+              description="Start a conversation. Your session’s posts will appear here."
               action={() => setCompose(true)}
             />
           )}

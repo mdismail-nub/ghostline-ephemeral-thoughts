@@ -18,3 +18,6 @@
 - Every public content route declares its own pageHead metadata; keep the home feed at `/` and use TanStack routes for discovery and post details.
 - Filter unavailable content centrally and recheck parent expiration when mutating replies or reactions; prototype filtering is not production deletion enforcement.
 - Keep additional discovery categories in the presentation topic catalog; reuse it for composing and filtering without changing content availability rules.
+
+- Keep global navigation in the shared Layout header with an accessible narrow-screen menu, and render Settings as independently selected sections; this prevents duplicated navigation and unbalanced settings layouts.
+- Treat unsupported authentication, reporting and permanent deletion as explicitly unavailable until integration; never mutate public identity from private credential input.
