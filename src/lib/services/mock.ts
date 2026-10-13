@@ -54,8 +54,8 @@ export function makePost(body: string, topic: string, now: number, alias = "Quie
     createdAt: now,
     expiresAt: now + 86400000,
     reactions: [
-      { kind: "heart", count: 0, selected: false },
-      { kind: "relate", count: 0, selected: false },
+      { kind: "love", count: 0, selected: false },
+      { kind: "dislike", count: 0, selected: false },
     ],
     replies: [],
     tone: "lavender",
@@ -126,17 +126,22 @@ export function seedPosts(now: number): Post[] {
     createdAt: now - (i === 1 ? 1440 - 204 : Number(r[3])) * 60000,
     expiresAt: now + (i === 1 ? 204 : 1440 - Number(r[3])) * 60000,
     reactions: [
-      { kind: "heart" as const, count: Number(r[4]), selected: false },
-      { kind: "relate" as const, count: Math.floor(Number(r[4]) / 3), selected: false },
+      { kind: "love" as const, count: Number(r[4]), selected: false },
+      {
+        kind: "dislike" as const,
+        count: Math.max(0, Math.floor(Number(r[4]) / 5)),
+        selected: false,
+      },
     ],
     replies: Array.from({ length: Number(r[5]) }, (_, j) => ({
       id: `reply-${i}-${j}`,
       alias: ["MellowFinch", "WanderingLeaf", "LittleNova"][j % 3] ?? "MellowFinch",
-      body: [
-        "Needed to read this today. Thank you for putting it into words.",
-        "Honestly, same. There’s something really comforting about that.",
-        "A little reminder to slow down. I’m taking this with me today.",
-      ][j % 3] ?? "A thought worth sharing.",
+      body:
+        [
+          "Needed to read this today. Thank you for putting it into words.",
+          "Honestly, same. There’s something really comforting about that.",
+          "A little reminder to slow down. I’m taking this with me today.",
+        ][j % 3] ?? "A thought worth sharing.",
       createdAt: now - (Number(r[3]) - j - 1) * 60000,
     })),
     tone: String(r[6]),

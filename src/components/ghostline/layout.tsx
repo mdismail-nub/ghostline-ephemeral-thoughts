@@ -64,37 +64,36 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="nav-actions">
           <Button className="compose-button" onClick={() => setCompose(true)}>
             <Plus />
-            <span className="compose-label">Compose post</span>
+            <span className="compose-label">Share thought</span>
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="theme-trigger"
-                aria-label="Change theme"
-                title="Change theme"
-              >
-                {theme === "dark" ? <Moon /> : <Sun />}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Appearance</DropdownMenuLabel>
-              {(
-                [
-                  { name: "Light", value: "light", icon: Sun },
-                  { name: "Dark", value: "dark", icon: Moon },
-                  { name: "System", value: "system", icon: Monitor },
-                ] as const
-              ).map((t) => (
-                <DropdownMenuItem key={t.value} onSelect={() => setTheme(t.value)}>
-                  <t.icon />
-                  {t.name}
-                  {theme === t.value && <span className="ml-auto text-primary">✓</span>}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Pookie-style stylish theme switcher */}
+          <button
+            type="button"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="pookie-theme-toggle"
+            aria-label={`Toggle theme: currently ${theme}. Switch to ${theme === "dark" ? "Sunny Light" : "Cozy Dark"}`}
+            title={
+              theme === "dark"
+                ? "🌙 Cozy Night · Switch to ☀️ Sunny Day"
+                : "☀️ Sunny Day · Switch to 🌙 Cozy Night"
+            }
+          >
+            <span className="pookie-track">
+              <span className={`pookie-knob ${theme === "dark" ? "knob-dark" : "knob-light"}`}>
+                {theme === "dark" ? (
+                  <Moon className="pookie-icon moon" />
+                ) : (
+                  <Sun className="pookie-icon sun" />
+                )}
+              </span>
+              <span className="pookie-side-icon sun-side" aria-hidden="true">
+                <Sun className="size-3" />
+              </span>
+              <span className="pookie-side-icon moon-side" aria-hidden="true">
+                <Sparkles className="size-2.5" />
+              </span>
+            </span>
+          </button>
           <span className="nav-divider" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -104,21 +103,24 @@ export function Layout({ children }: { children: ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{alias}</DropdownMenuLabel>
+              <DropdownMenuLabel className="font-semibold">{alias}</DropdownMenuLabel>
               <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                Preview identity
+                Anonymous identity · 24h lifetime
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                {theme === "dark" ? <Sun /> : <Moon />}
+                {theme === "dark" ? "Switch to Sunny Light" : "Switch to Cozy Dark"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setTheme("system")}>
+                <Monitor />
+                System appearance
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/profile">
                   <UserRound />
-                  My identity
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/settings">
-                  <Settings />
-                  Settings & privacy
+                  My pseudonym
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -194,7 +196,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Link to="/settings" className="privacy-link">
               Private by intention. <ArrowUpRight className="inline size-3" />
             </Link>
-            <p className="preview-badge">Interactive preview</p>
+            <p className="ephemeral-badge">Ephemeral · 24h lifetime</p>
           </div>
         </aside>
         {children}
@@ -309,13 +311,20 @@ export function EmptyState({
 }) {
   return (
     <div className="empty-state">
-      <img className="empty-illustration" src={emptyArt} width={1024} height={1024} loading="lazy" alt="A friendly ghost with a little thought to share" />
+      <img
+        className="empty-illustration"
+        src={emptyArt}
+        width={1024}
+        height={1024}
+        loading="lazy"
+        alt="A friendly ghost with a little thought to share"
+      />
       <h2>{title}</h2>
       <p>{description}</p>
       {action && (
-        <Button onClick={action}>
-          Drop a thought
-          <Plus />
+        <Button onClick={action} className="empty-action-btn">
+          <Plus className="size-4" />
+          <span>Drop a thought</span>
         </Button>
       )}
     </div>

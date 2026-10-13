@@ -1,93 +1,146 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, Send, Trash2, Clock3, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGhost } from "./store";
 import { PostCard } from "./post-card";
 import { PageHeading, Rightbar, EmptyState } from "./layout";
 import { GhostMark } from "./icons";
 import { validBody, relativeTime } from "@/lib/services/mock";
+
 export function PostDetail({ id }: { id: string }) {
-  const { posts, now, reply } = useGhost();
+  const { posts, now, reply, alias, deleteReply } = useGhost();
   const post = posts.find((p) => p.id === id);
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
+  const remainingChars = 280 - body.length;
+
   return (
     <>
       <main className="feed-column">
-        <Button asChild variant="ghost" className="mb-5 px-0 text-muted-foreground">
+        <Button
+          asChild
+          variant="ghost"
+          className="mb-5 px-0 text-muted-foreground hover:text-foreground"
+        >
           <Link to="/">
-            <ArrowLeft />
+            <ArrowLeft className="size-4 mr-1.5" />
             Back to feed
           </Link>
         </Button>
+
         {post ? (
           <>
             <PageHeading
               title="A moment, shared."
-              subtitle="A conversation doesn’t have to last forever to mean something."
+              subtitle="Conversations don't have to last forever to be meaningful."
             />
+
             <PostCard post={post} detail />
-            <h2 className="subheading">{post.replies.length} replies</h2>
+
+            <div className="flex items-center justify-between mt-8 mb-4">
+              <h2 className="text-base font-semibold flex items-center gap-2">
+                <MessageCircle className="size-4 text-primary" />
+                <span>
+                  {post.replies.length} {post.replies.length === 1 ? "reply" : "replies"}
+                </span>
+              </h2>
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Clock3 className="size-3" />
+                All replies dissolve with this post
+              </span>
+            </div>
+
             {post.replies.length ? (
-              post.replies
-                .slice()
-                .sort((a, b) => a.createdAt - b.createdAt)
-                .map((r) => (
-                  <article className="reply-card" key={r.id}>
-                    <div className="flex items-center gap-3">
-                      <GhostMark className="avatar blue" />
-                      <div>
-                        <h3 className="post-alias">{r.alias}</h3>
-                        <span className="post-time">
-                          {relativeTime(r.createdAt, now)} · Fades with this post
-                        </span>
-                      </div>
-                    </div>
-                    <p>{r.body}</p>
-                  </article>
-                ))
+              <div className="space-y-3 mb-6">
+                {post.replies
+                  .slice()
+                  .sort((a, b) => a.createdAt - b.createdAt)
+                  .map((r) => {
+                    const isOwner = r.alias === alias;
+                    return (
+                      <article className="reply-card" key={r.id}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <GhostMark className="avatar blue shrink-0" />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="post-alias">{r.alias}</h3>
+                                {isOwner && <span className="author-badge">You</span>}
+                              </div>
+                              <span className="post-time">{relativeTime(r.createdAt, now)}</span>
+                            </div>
+                          </div>
+                          {isOwner && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 size-8 shrink-0"
+                              onClick={() => deleteReply(post.id, r.id)}
+                              title="Delete your reply"
+                              aria-label="Delete your reply"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                        <p className="reply-body mt-2.5">{r.body}</p>
+                      </article>
+                    );
+                  })}
+              </div>
             ) : (
               <EmptyState
                 title="Be the first to reply."
-                description="Sometimes a little understanding goes a long way."
+                description="Share a kind response. All replies dissolve automatically with the original thought."
               />
             )}
+
             <form
-              className="reply-composer"
+              className="reply-composer-card"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (reply(post.id, body)) {
                   setBody("");
                   setError("");
-                } else
-                  setError("This conversation is no longer available, or your reply is empty.");
+                } else {
+                  setError("This thought is no longer available or your reply is empty.");
+                }
               }}
             >
-              <label htmlFor="reply" className="block mb-3 text-sm font-medium">
-                Add your thought
-              </label>
+              <div className="flex items-center justify-between mb-3">
+                <label htmlFor="reply-input" className="text-sm font-semibold">
+                  Reply as <span className="text-primary font-bold">{alias}</span>
+                </label>
+                <span
+                  className={`text-xs tabular-nums ${remainingChars < 20 ? "text-destructive font-semibold" : "text-muted-foreground"}`}
+                  aria-live="polite"
+                >
+                  {remainingChars} left
+                </span>
+              </div>
+
               <textarea
-                id="reply"
-                className="text-input"
-                placeholder="Keep the conversation going…"
+                id="reply-input"
+                className="reply-textarea"
+                placeholder="Share your kind thoughts or perspective…"
                 maxLength={280}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                aria-describedby="reply-policy"
+                rows={3}
               />
+
               <div className="flex items-center justify-between mt-3">
-                <p id="reply-policy" className="text-xs text-muted-foreground">
-                  Replies fade with their parent post.
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Clock3 className="size-3 shrink-0" />
+                  <span>Replies disappear with this post after 24 hours.</span>
                 </p>
-                <Button type="submit" disabled={!validBody(body)}>
-                  Reply
-                  <ArrowUpRight />
+                <Button type="submit" disabled={!validBody(body)} size="sm">
+                  <span>Send reply</span>
+                  <Send className="size-3.5 ml-1.5" />
                 </Button>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground" aria-live="polite">
-                {body.length}/280
-              </p>
+
               {error && (
                 <p role="alert" className="text-destructive text-xs mt-2">
                   {error}
@@ -97,8 +150,8 @@ export function PostDetail({ id }: { id: string }) {
           </>
         ) : (
           <EmptyState
-            title="This conversation has drifted away."
-            description="The post has expired, was blocked, or isn’t available in this preview. Its content and replies are no longer shown."
+            title="This thought has drifted away."
+            description="The thought has expired after 24 hours, was deleted by its author, or is no longer available."
           />
         )}
       </main>

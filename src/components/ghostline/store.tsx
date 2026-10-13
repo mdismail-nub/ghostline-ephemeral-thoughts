@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { Post } from "@/types/ghostline";
-import { seedPosts, makePost, isActive, validBody } from "@/lib/services/mock";
+import type { Post, ReactionKind } from "@/types/ghostline";
+import { makePost, isActive, validBody } from "@/lib/services/mock";
 import { toast } from "sonner";
 type Theme = "light" | "dark" | "system";
 interface Store {
@@ -19,7 +19,7 @@ interface Store {
   joined: string[];
   join: (s: string) => void;
   publish: (body: string, topic: string) => boolean;
-  react: (id: string, kind: "heart" | "relate") => void;
+  react: (id: string, kind: ReactionKind) => void;
   reply: (id: string, body: string) => boolean;
   compose: boolean;
   setCompose: (b: boolean) => void;
@@ -27,6 +27,8 @@ interface Store {
   setOnboard: (b: boolean) => void;
   finishOnboarding: () => void;
   clearIdentity: () => void;
+  deletePost: (id: string) => boolean;
+  deleteReply: (postId: string, replyId: string) => boolean;
 }
 const Context = createContext<Store | null>(null);
 export function GhostProvider({ children }: { children: ReactNode }) {
@@ -43,12 +45,13 @@ export function GhostProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const time = Date.now();
     setNow(time);
-    setPosts(seedPosts(time));
+    // Start with zero dummy data as requested
+    setPosts([]);
     setReady(true);
     setOnboard(localStorage.getItem("ghostline-onboarded") !== "yes");
     const saved = localStorage.getItem("ghostline-theme");
     if (saved === "dark" || saved === "light" || saved === "system") setTheme(saved);
-    const interval = setInterval(() => setNow(Date.now()), 30000);
+    const interval = setInterval(() => setNow(Date.now()), 10000);
     return () => clearInterval(interval);
   }, []);
   useEffect(() => {
@@ -72,25 +75,39 @@ export function GhostProvider({ children }: { children: ReactNode }) {
     const time = Date.now();
     setNow(time);
     setPosts((p) => [makePost(body, t, time, alias), ...p]);
-    toast.success("Post added to this preview");
+    toast.success("Thought posted! Disappears automatically in 24h.");
     return true;
   };
-  const react = (id: string, kind: "heart" | "relate") => {
+  const react = (id: string, kind: ReactionKind) => {
     const time = Date.now();
     setNow(time);
     setPosts((p) =>
-      p.map((x) =>
-        x.id === id && isActive(x, time)
-          ? {
-              ...x,
-              reactions: x.reactions.map((r) =>
-                r.kind === kind
-                  ? { ...r, count: r.count + (r.selected ? -1 : 1), selected: !r.selected }
-                  : r,
-              ),
+      p.map((x) => {
+        if (x.id !== id || !isActive(x, time)) return x;
+        const currentTarget = x.reactions.find((r) => r.kind === kind);
+        const willSelect = !currentTarget?.selected;
+        return {
+          ...x,
+          reactions: x.reactions.map((r) => {
+            if (r.kind === kind) {
+              return {
+                ...r,
+                count: willSelect ? r.count + 1 : Math.max(0, r.count - 1),
+                selected: willSelect,
+              };
             }
-          : x,
-      ),
+            // If selecting one reaction, unselect the other (e.g. love vs dislike)
+            if (willSelect && r.selected) {
+              return {
+                ...r,
+                count: Math.max(0, r.count - 1),
+                selected: false,
+              };
+            }
+            return r;
+          }),
+        };
+      }),
     );
   };
   const reply = (id: string, body: string) => {
@@ -111,23 +128,51 @@ export function GhostProvider({ children }: { children: ReactNode }) {
           : x,
       ),
     );
-    toast.success("Reply added to this preview");
+    toast.success("Reply added · Disappears with this thought");
     return true;
   };
   const block = (s: string) => {
     setBlocked((b) => (b.includes(s) ? b : [...b, s]));
-    toast.success(`${s} blocked in this preview`);
+    toast.success(`${s} blocked`);
   };
   const join = (s: string) => {
     setJoined((j) => (j.includes(s) ? j.filter((t) => t !== s) : [...j, s]));
-    toast.success(joined.includes(s) ? `Left ${s}` : `Joined ${s} in this preview`);
+    toast.success(joined.includes(s) ? `Left ${s}` : `Joined ${s}`);
   };
   const clearIdentity = () => {
     setPosts((p) => p.filter((x) => x.alias !== alias));
     setAlias("QuietFox42");
     setBlocked([]);
     setJoined([]);
-    toast.success("Local identity reset; no real account was deleted");
+    toast.success("Identity reset");
+  };
+  const deletePost = (id: string) => {
+    const target = posts.find((p) => p.id === id);
+    if (!target) return false;
+    if (target.alias !== alias) {
+      toast.error("You can only delete your own thoughts");
+      return false;
+    }
+    setPosts((p) => p.filter((x) => x.id !== id));
+    toast.success("Thought deleted");
+    return true;
+  };
+  const deleteReply = (postId: string, replyId: string) => {
+    const targetPost = posts.find((p) => p.id === postId);
+    if (!targetPost) return false;
+    const targetReply = targetPost.replies.find((r) => r.id === replyId);
+    if (!targetReply) return false;
+    if (targetReply.alias !== alias) {
+      toast.error("You can only delete your own replies");
+      return false;
+    }
+    setPosts((p) =>
+      p.map((x) =>
+        x.id === postId ? { ...x, replies: x.replies.filter((r) => r.id !== replyId) } : x,
+      ),
+    );
+    toast.success("Reply deleted");
+    return true;
   };
   return (
     <Context.Provider
@@ -155,6 +200,8 @@ export function GhostProvider({ children }: { children: ReactNode }) {
         setOnboard,
         finishOnboarding,
         clearIdentity,
+        deletePost,
+        deleteReply,
       }}
     >
       {children}

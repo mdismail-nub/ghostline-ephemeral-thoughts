@@ -2,27 +2,15 @@
 
 Build Ghostline — Anonymous, Text-Only Social Network UI/UX
 
-
-
 Act as a senior product designer and frontend engineer. Design and build a polished, responsive web application called Ghostline (working title), a global pseudonymous social network where users can share text-only thoughts, participate in conversations, and have their content expire after 24 hours.
-
-
 
 Use the two attached reference images as the primary visual direction. Do not copy their original content or build a scooter-rental or SEO dashboard. Translate their design principles into a unique, cohesive social networking experience.
 
-
-
 1. Product vision
-
-
 
 Ghostline is a place to express thoughts without creating a permanent public identity.
 
-
-
 Core principles:
-
-
 
 - Pseudonymous identities instead of public real names.
 
@@ -38,23 +26,13 @@ Core principles:
 
 - Light and dark theme switching.
 
-
-
 The experience should feel modern, calm, approachable, premium, and privacy-focused. Avoid a generic Twitter/X clone.
-
-
 
 2. Analyze and apply the uploaded design references
 
-
-
 Reference 1: Mobile onboarding screens
 
-
-
 Use the first attached image as inspiration for:
-
-
 
 - Three-step onboarding.
 
@@ -78,49 +56,29 @@ Use the first attached image as inspiration for:
 
 - Skip and Next navigation.
 
-
-
 Adapt the three onboarding steps to Ghostline:
-
-
 
 Screen 1 — Say what you think
 
 Explain that users can share thoughts under a pseudonym without displaying their real name.
 
-
-
 Screen 2 — Conversations that fade
 
 Explain that posts and replies are temporary and become unavailable after their 24-hour lifetime.
-
-
 
 Screen 3 — Your space, your rules
 
 Explain text-only conversations, privacy controls, blocking, and reporting.
 
-
-
 Use original illustrations featuring abstract speech bubbles, floating text cards, clocks, and disappearing particles. Do not use scooter imagery or irrelevant stock illustrations.
-
-
 
 Provide a functional onboarding carousel with Next, Back, Skip, and Get Started actions. Include accessible progress indicators and responsive layouts.
 
-
-
 Onboarding should appear on the first visit and remain skippable. Do not repeatedly force returning users through onboarding.
-
-
 
 Reference 2: Card-based dashboard
 
-
-
 Use the second attached image as inspiration for:
-
-
 
 - A clean horizontal navigation bar.
 
@@ -140,31 +98,17 @@ Use the second attached image as inspiration for:
 
 - Minimal, uncluttered controls.
 
-
-
 Adapt this visual system to a social feed and topic-discovery experience.
-
-
 
 Do not reproduce the reference's four-column card grid everywhere. The main social feed should remain a readable, centered, single-column feed, while Explore can use a responsive grid of topic cards.
 
-
-
 Maintain consistent radii, typography, spacing, icon sizes, and interaction states across the application.
-
-
 
 3. Visual design system
 
-
-
 Create a consistent design system with reusable tokens.
 
-
-
 Typography
-
-
 
 - Use Inter or a similarly readable modern sans-serif.
 
@@ -176,11 +120,7 @@ Typography
 
 - Avoid excessively large headings inside individual feed cards.
 
-
-
 Light theme
-
-
 
 - Background: soft off-white or pale blue-grey.
 
@@ -194,11 +134,7 @@ Light theme
 
 - Supporting colors: pastel green, lavender, pale blue, and soft amber.
 
-
-
 Dark theme
-
-
 
 - Background: deep charcoal.
 
@@ -212,11 +148,7 @@ Dark theme
 
 - Preserve semantic colors and readable contrast.
 
-
-
 Component styling
-
-
 
 - Rounded cards, approximately 12–18px radius.
 
@@ -232,41 +164,23 @@ Component styling
 
 - Clear hover, active, disabled, loading, and error states.
 
-
-
 Use semantic design tokens so the theme switcher updates the entire application consistently. Do not duplicate components for light and dark themes.
-
-
 
 4. Main application layout
 
-
-
 Build a complete multi-page interface.
-
-
 
 Desktop navigation
 
-
-
 Create a clean, rounded top navigation bar inspired by Reference 2.
 
-
-
 Left:
-
-
 
 - Ghostline logo or a simple custom wordmark.
 
 - A small abstract speech-bubble or fading-dot symbol.
 
-
-
 Center:
-
-
 
 - Home
 
@@ -274,11 +188,7 @@ Center:
 
 - Communities
 
-
-
 Right:
-
-
 
 - Compose Post button.
 
@@ -286,19 +196,11 @@ Right:
 
 - Pseudonymous user menu.
 
-
-
 Keep navigation compact and uncluttered.
-
-
 
 Mobile navigation
 
-
-
 Use a responsive mobile layout with:
-
-
 
 - A compact top bar.
 
@@ -310,19 +212,11 @@ Use a responsive mobile layout with:
 
 - A floating compose button if it improves usability.
 
-
-
 Ensure content is not hidden behind the mobile bottom navigation or device safe areas.
-
-
 
 5. Required screens
 
-
-
 A. Onboarding
-
-
 
 - Three illustrated slides.
 
@@ -334,11 +228,7 @@ A. Onboarding
 
 - Responsive mobile and desktop layouts.
 
-
-
 B. Home feed
-
-
 
 - Centered, single-column feed with a comfortable maximum width.
 
@@ -354,15 +244,9 @@ B. Home feed
 
 - Clear loading, empty, and error states.
 
-
-
 Use believable mock posts that demonstrate different content lengths and topics. Do not fill the feed with generic marketing copy.
 
-
-
 C. Create Post
-
-
 
 - Large, distraction-free text area.
 
@@ -380,15 +264,9 @@ C. Create Post
 
 - Accessible validation messages.
 
-
-
 Do not include image uploads, attachments, video, audio, or rich-media controls.
 
-
-
 D. Post Detail
-
-
 
 - Full post content.
 
@@ -406,19 +284,11 @@ D. Post Detail
 
 - Expired-post state that does not expose expired content.
 
-
-
 E. Explore
-
-
 
 Use a responsive card grid inspired by Reference 2.
 
-
-
 Include:
-
-
 
 - Trending topics.
 
@@ -430,19 +300,11 @@ Include:
 
 - Topic activity indicators based only on currently available content.
 
-
-
 Each topic card should use a small colorful icon container, a title, a short description, and a clear action.
-
-
 
 Never display expired posts in search results or trending sections.
 
-
-
 F. Communities
-
-
 
 - Community/topic cards.
 
@@ -454,15 +316,9 @@ F. Communities
 
 - Empty states for new communities.
 
-
-
 Keep community membership separate from public identity information.
 
-
-
 G. Pseudonymous profile
-
-
 
 - Generated alias, such as "QuietFox42".
 
@@ -476,15 +332,9 @@ G. Pseudonymous profile
 
 - Delete account action.
 
-
-
 Do not include a real-name field, profile-photo upload, permanent follower count, or personal biography.
 
-
-
 H. Settings and privacy
-
-
 
 - Light, dark, and system theme options.
 
@@ -500,39 +350,21 @@ H. Settings and privacy
 
 - Content expiration explanation.
 
-
-
 Clearly distinguish automatic post expiration from account deletion.
-
-
 
 I. Authentication
 
-
-
 Create clean Sign In and Create Account screens consistent with the design system.
-
-
 
 Use pseudonymous public profiles. If email or another authentication method is used, keep the underlying authentication identifier private.
 
-
-
 Do not promise that users are completely anonymous to the service itself.
-
-
 
 6. Post card component
 
-
-
 Create a reusable PostCard component.
 
-
-
 Each card should contain:
-
-
 
 - A generated pseudonym.
 
@@ -550,31 +382,17 @@ Each card should contain:
 
 - A contextual menu for reporting or blocking.
 
-
-
 The expiration indicator should be understated but understandable. Use a small clock icon and text such as "Expires in 3h 24m".
-
-
 
 Do not use an oversized countdown, flashing warning, or distracting progress animation.
 
-
-
 Post content must render as text, never as executable HTML.
-
-
 
 7. Interactions and functional behavior
 
-
-
 All visible controls must have meaningful behavior.
 
-
-
 Implement:
-
-
 
 - Working onboarding navigation.
 
@@ -604,23 +422,13 @@ Implement:
 
 - Accessible keyboard navigation.
 
-
-
 If the project is not yet connected to a backend, use a clearly isolated mock-data service and local interaction state for the prototype.
-
-
 
 Do not present simulated authentication, publication, or deletion as production functionality. Do not use local browser storage as the authoritative source for content expiration.
 
-
-
 8. Expiration UX and privacy disclosures
 
-
-
 Design the interface to support the following backend rules:
-
-
 
 - Each post expires 24 hours after server-recorded publication.
 
@@ -634,27 +442,15 @@ Design the interface to support the following backend rules:
 
 - Account deletion invalidates the user's active sessions and removes their identity associations.
 
-
-
 Use a short, understandable privacy notice:
-
-
 
 "Posts disappear from Ghostline after 24 hours. Screenshots, external copies, and certain backup or legally required records may persist."
 
-
-
 Show the expiration policy near the composer and in Settings.
-
-
 
 Do not claim that a frontend timer deletes content. Actual expiration and deletion must be enforced by the backend.
 
-
-
 9. Accessibility and responsive behavior
-
-
 
 - Use semantic HTML.
 
@@ -674,19 +470,11 @@ Do not claim that a frontend timer deletes content. Actual expiration and deleti
 
 - Test the layout at mobile, tablet, and desktop widths.
 
-
-
 10. Engineering structure
-
-
 
 Organize the project into reusable components and clear service boundaries.
 
-
-
 Suggested structure:
-
-
 
 - "components/layout/"
 
@@ -712,67 +500,35 @@ Suggested structure:
 
 - "types/"
 
-
-
 Use TypeScript interfaces for Profile, Post, Reply, Reaction, Topic, and Report.
-
-
 
 Keep mock data isolated from UI components so a real backend can replace it without rewriting the application.
 
-
-
 Do not hardcode secrets or expose privileged Supabase keys.
-
-
 
 11. Development sequence
 
-
-
 Build in these stages:
-
-
 
 Stage 1: Design system, onboarding, navigation, theme switcher, and responsive layout.
 
-
-
 Stage 2: Home feed, reusable post cards, composer, Explore, and topic cards.
-
-
 
 Stage 3: Post detail, replies, reactions, profile, and settings.
 
-
-
 Stage 4: Authentication and Supabase integration.
-
-
 
 Stage 5: Server-enforced expiration, database security policies, automated cleanup, and temporary identity deletion.
 
-
-
 Stage 6: Reporting, blocking, rate limiting, automated tests, and deployment hardening.
-
-
 
 For the first iteration, prioritize Stage 1 and Stage 2. Keep the architecture ready for the remaining stages, but do not pretend that future backend functionality already exists.
 
-
-
 12. Final quality requirements
-
-
 
 The finished interface should look like a professionally designed startup product, not a generic generated dashboard.
 
-
-
 Prioritize:
-
-
 
 - Fidelity to the two attached visual references.
 
@@ -789,8 +545,6 @@ Prioritize:
 - A polished mobile experience.
 
 - Maintainable, reusable components.
-
-
 
 First inspect the existing project and preserve any working implementation. Then build the UI in the defined stages, verify responsive behavior, and report what is functional, what uses mock data, and what still requires backend integration.
 

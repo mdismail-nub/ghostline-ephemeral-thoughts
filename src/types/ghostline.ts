@@ -2,8 +2,10 @@ export interface Profile {
   alias: string;
   createdAt: number;
 }
+export type ReactionKind = "love" | "dislike" | "heart" | "relate";
+
 export interface Reaction {
-  kind: "heart" | "relate";
+  kind: ReactionKind;
   count: number;
   selected: boolean;
 }

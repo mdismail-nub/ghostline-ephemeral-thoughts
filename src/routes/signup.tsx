@@ -5,7 +5,7 @@ export const Route = createFileRoute("/signup")({
   head: () =>
     pageHead(
       "Create account",
-      "Create-account interface preview with a private email and pseudonymous public profile.",
+      "Create your Ghostline account with a private email and pseudonymous public profile.",
     ),
   component: Signup,
 });

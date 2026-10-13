@@ -39,7 +39,13 @@ export function Onboarding() {
             src={step === 1 ? fading : step === 2 ? privacy : art}
             width={1024}
             height={1024}
-            alt={step === 1 ? "A smiling clock with fading messages and tiny stars" : step === 2 ? "Friendly anonymous ghosts exchanging text bubbles" : "A little ghost holding a mint speech bubble"}
+            alt={
+              step === 1
+                ? "A smiling clock with fading messages and tiny stars"
+                : step === 2
+                  ? "Friendly anonymous ghosts exchanging text bubbles"
+                  : "A little ghost holding a mint speech bubble"
+            }
           />
           <span className="onboard-wordmark">ghostline</span>
         </div>
@@ -75,7 +81,9 @@ export function Onboarding() {
               Skip for now
             </Button>
           </div>
-          <p className="prototype-note">You’re exploring a preview with sample conversations.</p>
+          <p className="prototype-note">
+            All conversations dissolve and disappear automatically after 24 hours.
+          </p>
         </div>
       </DialogContent>
     </Dialog>

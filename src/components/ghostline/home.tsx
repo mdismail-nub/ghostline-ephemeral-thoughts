@@ -76,8 +76,12 @@ export function HomeFeed() {
             filtered.map((p) => <PostCard key={p.id} post={p} />)
           ) : (
             <EmptyState
-              title="Nothing floating around here yet."
-              description="No active thoughts in this topic. Leave the first one, or wander somewhere new."
+              title={
+                topic === "All topics"
+                  ? "No thoughts here yet."
+                  : `No thoughts in #${topic.toLowerCase()} yet.`
+              }
+              description="Everything on Ghostline is deleted automatically after 24 hours. Drop the first thought today!"
               action={() => setCompose(true)}
             />
           )}

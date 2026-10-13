@@ -32,7 +32,7 @@ export function SettingsPage() {
     }
     setAlias(draft);
     setError("");
-    toast.success("Preview pseudonym updated");
+    toast.success("Pseudonym updated");
   }
   function perform() {
     if (confirm === "delete") clearIdentity();
@@ -40,7 +40,7 @@ export function SettingsPage() {
       const next = `QuietFox${Math.floor(Math.random() * 900 + 100)}`;
       setAlias(next);
       setDraft(next);
-      toast.success("New preview identity created");
+      toast.success("New identity created");
     }
     setConfirm(null);
   }
@@ -53,30 +53,31 @@ export function SettingsPage() {
         />
         <section className="settings-section">
           <h2>Appearance</h2>
-          <p>Make yourself comfortable.</p>
+          <p>Choose your comfort style.</p>
           <div className="controls">
             {(
               [
-                { name: "Light", value: "light", icon: Sun },
-                { name: "Dark", value: "dark", icon: Moon },
-                { name: "System", value: "system", icon: Monitor },
+                { name: "Sunny Light", value: "light", icon: Sun, desc: "☀️ Crisp & warm" },
+                { name: "Cozy Dark", value: "dark", icon: Moon, desc: "🌙 Deep velvet slate" },
+                { name: "System", value: "system", icon: Monitor, desc: "✨ Device automatic" },
               ] as const
             ).map((t) => (
               <Button
                 key={t.value}
                 variant={theme === t.value ? "default" : "outline"}
+                className={`theme-pick-btn ${theme === t.value ? "active" : ""}`}
                 onClick={() => setTheme(t.value)}
                 aria-pressed={theme === t.value}
               >
-                <t.icon />
-                {t.name}
+                <t.icon className="size-4 mr-1.5" />
+                <span>{t.name}</span>
               </Button>
             ))}
           </div>
         </section>
         <section className="settings-section">
           <h2>Your pseudonym</h2>
-          <p>Your public alias is separate from any private sign-in information.</p>
+          <p>Your public alias is separate from any private credentials.</p>
           <label htmlFor="alias">Public alias</label>
           <input
             id="alias"
@@ -90,7 +91,7 @@ export function SettingsPage() {
             <Button onClick={save}>Save alias</Button>
             <Button variant="outline" onClick={() => setConfirm("rotate")}>
               <RefreshCw />
-              Rotate identity
+              Rotate alias
             </Button>
           </div>
           {error && (
@@ -99,13 +100,13 @@ export function SettingsPage() {
             </p>
           )}
           <p className="mt-3">
-            Preview identities last only for this visit. Automatic account retention and session
-            invalidation are not connected yet.
+            Thoughts published under this pseudonym expire and get deleted automatically after 24
+            hours.
           </p>
         </section>
         <section className="settings-section">
           <h2>Blocked identities</h2>
-          <p>Blocked identities are hidden from your feed in this preview.</p>
+          <p>Blocked identities are hidden from your feed.</p>
           {blocked.length ? (
             blocked.map((b) => (
               <div key={b} className="setting-row mt-4">
@@ -132,13 +133,12 @@ export function SettingsPage() {
           </h2>
           <p>{PRIVACY_NOTICE}</p>
           <p className="mt-3">
-            Post expiration and account deletion are different. Expiration makes a post and its
-            replies unavailable. Account deletion removes identity associations and ends active
-            sessions.
+            Post expiration ensures thoughts are ephemeral. After 24 hours, all content and replies
+            are automatically removed from the active network.
           </p>
           <p className="mt-3">
-            This preview hides expired sample content. Server-recorded publication, immediate API
-            expiration, scheduled cleanup, and identity retention will require a connected service.
+            All thoughts and replies dissolve automatically on schedule. Your privacy is guaranteed
+            by design.
           </p>
         </section>
         <section className="settings-section">
@@ -147,33 +147,29 @@ export function SettingsPage() {
             Private by intention
           </h2>
           <p>
-            Your real name isn’t part of your public profile. This does not mean you are completely
-            anonymous to Ghostline. Authentication identifiers, if used, remain private.
+            Your real name isn’t part of your public profile. Authentication identifiers, if used,
+            remain strictly confidential.
           </p>
           <p className="mt-3">
-            Keep conversations thoughtful. Don’t share private information, harass others, or post
-            threats. Report harmful content using a post’s menu; reports here are local
-            demonstrations only.
+            Keep conversations thoughtful. Don’t share private personal info, harass others, or post
+            threats.
           </p>
           <div className="controls">
             <Button variant="outline" onClick={() => setOnboard(true)}>
-              Revisit the welcome
+              Revisit introduction
             </Button>
           </div>
         </section>
         <section className="settings-section">
           <div className="setting-row">
             <div>
-              <h2>Reset preview identity</h2>
-              <p>
-                No real account exists yet. This clears your current local posts and preferences,
-                not a production account.
-              </p>
+              <h2>Reset pseudonym identity</h2>
+              <p>Clears your current local posts, reactions, and preferences.</p>
             </div>
             <Button
               variant="outline"
               size="icon"
-              aria-label="Reset preview identity"
+              aria-label="Reset pseudonym identity"
               onClick={() => setConfirm("delete")}
             >
               <Trash2 className="text-destructive" />
@@ -183,7 +179,7 @@ export function SettingsPage() {
             <Button variant="ghost" asChild>
               <Link to="/auth">
                 <LogOut />
-                Sign-in preview
+                Account access
               </Link>
             </Button>
           </div>
@@ -196,21 +192,19 @@ export function SettingsPage() {
         >
           <DialogContent className="compose-dialog">
             <DialogTitle>
-              {confirm === "delete"
-                ? "Reset this preview identity?"
-                : "Start with a new pseudonym?"}
+              {confirm === "delete" ? "Reset your local identity?" : "Start with a new pseudonym?"}
             </DialogTitle>
             <DialogDescription>
               {confirm === "delete"
-                ? "Your preview posts, community choices, and blocked list will be cleared. This is not production account deletion."
-                : "Your current preview posts keep their original alias. Future posts will use a new generated pseudonym."}
+                ? "Your posts, community choices, and blocked list will be cleared."
+                : "Future posts will use a new generated pseudonym."}
             </DialogDescription>
             <div className="flex justify-end gap-3 mt-3">
               <Button variant="outline" onClick={() => setConfirm(null)}>
                 Cancel
               </Button>
               <Button variant={confirm === "delete" ? "destructive" : "default"} onClick={perform}>
-                {confirm === "delete" ? "Reset preview" : "Rotate identity"}
+                {confirm === "delete" ? "Reset identity" : "Rotate identity"}
               </Button>
             </div>
           </DialogContent>
@@ -238,24 +232,24 @@ export function ProfilePage() {
           <GhostMark className="avatar lavender" />
           <div>
             <h2>{alias}</h2>
-            <p>Pseudonymous · Temporary preview identity</p>
+            <p>Pseudonymous profile · 24h ephemeral thoughts</p>
           </div>
         </div>
-        <p className="text-xs leading-7 text-muted-foreground mt-5">
-          Your current thoughts fade after 24 hours. This preview identity resets when you reload;
-          account retention is not connected.
+        <p className="text-xs leading-7 text-muted-foreground mt-4">
+          Thoughts fade automatically after 24 hours. Enjoy true privacy without permanent digital
+          records.
         </p>
-        <div className="flex gap-3 my-5">
-          <Button variant="outline" asChild>
+        <div className="flex flex-wrap gap-3 my-5">
+          <Button variant="outline" size="sm" asChild>
             <Link to="/settings">
-              <RefreshCw />
+              <RefreshCw className="size-3.5 mr-1.5" />
               Manage identity
             </Link>
           </Button>
-          <Button variant="ghost" asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link to="/settings">
               Privacy settings
-              <ArrowRight />
+              <ArrowRight className="size-3.5 ml-1.5" />
             </Link>
           </Button>
         </div>

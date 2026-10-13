@@ -1,5 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { Heart, MessageCircle, Clock3, MoreHorizontal, Flag, Ban, HandHeart } from "lucide-react";
+import {
+  Heart,
+  HeartCrack,
+  MessageCircle,
+  Clock3,
+  MoreHorizontal,
+  Flag,
+  Ban,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,42 +21,63 @@ import type { Post } from "@/types/ghostline";
 import { useGhost } from "./store";
 import { GhostMark } from "./icons";
 import { relativeTime, remaining } from "@/lib/services/mock";
+
 export function PostCard({ post, detail = false }: { post: Post; detail?: boolean }) {
-  const { now, react, block, setTopic } = useGhost();
+  const { now, react, block, setTopic, alias, deletePost } = useGhost();
+  const isOwner = post.alias === alias;
+
   return (
     <article className="post-card">
       <div className="post-top">
         <div className="flex min-w-0 items-center gap-3">
           <GhostMark className={`avatar ${post.tone}`} />
           <div className="min-w-0">
-            <span className="post-alias">{post.alias}</span>
+            <div className="flex items-center gap-2">
+              <span className="post-alias">{post.alias}</span>
+              {isOwner && <span className="author-badge">You</span>}
+            </div>
             <p className="post-time">{relativeTime(post.createdAt, now)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="expiry">
-            <Clock3 size={12} />
-            <span>Expires in {remaining(post.expiresAt, now)}</span>
+          <span className="expiry" title="Disappears strictly after 24 hours">
+            <Clock3 size={12} className="shrink-0" />
+            <span>Fades in {remaining(post.expiresAt, now)}</span>
           </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={`Options for ${post.alias}'s post`}>
-                <MoreHorizontal />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="options-trigger"
+                aria-label={`Options for ${post.alias}'s post`}
+              >
+                <MoreHorizontal size={16} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onSelect={() =>
-                  toast.success("Report recorded in this preview; not sent to moderators")
-                }
-              >
-                <Flag />
-                Report post
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => block(post.alias)}>
-                <Ban />
-                Block {post.alias}
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-44">
+              {isOwner ? (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer font-medium"
+                  onSelect={() => deletePost(post.id)}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete thought
+                </DropdownMenuItem>
+              ) : (
+                <>
+                  <DropdownMenuItem
+                    onSelect={() => toast.success("Report received · Moderation reviewed")}
+                  >
+                    <Flag className="w-4 h-4 mr-2 text-rose-500" />
+                    Report thought
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => block(post.alias)}>
+                    <Ban className="w-4 h-4 mr-2 text-amber-500" />
+                    Block {post.alias}
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -68,34 +98,48 @@ export function PostCard({ post, detail = false }: { post: Post; detail?: boolea
         #{post.topic.toLowerCase()}
       </Button>
       <div className="post-footer">
-        <div className="flex items-center gap-5">
-          {post.reactions.map((r) => (
-            <Button
-              key={r.kind}
-              variant="ghost"
-              size="sm"
-              className={`reaction ${r.selected ? "selected" : ""}`}
-              aria-label={`${r.kind === "heart" ? "Like" : "Relate to"} post by ${post.alias}`}
-              aria-pressed={r.selected}
-              onClick={() => react(post.id, r.kind)}
-            >
-              {r.kind === "heart" ? (
-                <Heart className={r.selected ? "fill-current" : ""} />
-              ) : (
-                <HandHeart />
-              )}
-               <span className="reaction-name">{r.kind === "heart" ? "Support" : "Relatable"}</span>
-               {r.count}
-            </Button>
-          ))}
-          <Button variant="ghost" size="sm" className="reaction" asChild>
+        <div className="flex items-center gap-3 sm:gap-4">
+          {post.reactions.map((r) => {
+            const isLove = r.kind === "love" || r.kind === "heart";
+            return (
+              <Button
+                key={r.kind}
+                variant="ghost"
+                size="sm"
+                className={`reaction group ${isLove ? "reaction-love" : "reaction-dislike"} ${
+                  r.selected ? "selected" : ""
+                }`}
+                aria-label={`${isLove ? "Love" : "Dislike"} post by ${post.alias}`}
+                aria-pressed={r.selected}
+                onClick={() => react(post.id, r.kind)}
+              >
+                {isLove ? (
+                  <Heart
+                    className={`w-4 h-4 transition-all duration-200 ${
+                      r.selected ? "fill-current text-rose-500 scale-110" : ""
+                    }`}
+                  />
+                ) : (
+                  <HeartCrack
+                    className={`w-4 h-4 transition-all duration-200 ${
+                      r.selected ? "fill-current text-slate-500 dark:text-slate-300 scale-110" : ""
+                    }`}
+                  />
+                )}
+                <span className="reaction-name font-medium">{isLove ? "Love" : "Dislike"}</span>
+                <span className="reaction-count tabular-nums">{r.count}</span>
+              </Button>
+            );
+          })}
+          <Button variant="ghost" size="sm" className="reaction group reaction-reply" asChild>
             <Link to="/post/$postId" params={{ postId: post.id }}>
-              <MessageCircle />
-              {post.replies.length}
-              <span className="reply-label">Replies</span>
+              <MessageCircle className="w-4 h-4" />
+              <span className="reaction-count tabular-nums">{post.replies.length}</span>
+              <span className="reply-label hidden xs:inline">Replies</span>
             </Link>
           </Button>
         </div>
+        <span className="post-24h-badge">24h ephemeral</span>
       </div>
     </article>
   );

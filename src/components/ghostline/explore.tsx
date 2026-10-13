@@ -20,7 +20,7 @@ export function Explore({ communities = false }: { communities?: boolean }) {
   return (
     <main className="discovery-main">
       <PageHeading
-         title={communities ? "Find your people." : "Follow your curiosity."}
+        title={communities ? "Find your people." : "Follow your curiosity."}
         subtitle={
           communities
             ? "Shared interests. Fresh perspectives. No public membership lists."
@@ -114,16 +114,18 @@ export function Explore({ communities = false }: { communities?: boolean }) {
             <h2 className="section-title">
               <Flame />A conversation worth joining
             </h2>
-            {posts[1] ? (
-              <Link to="/post/$postId" params={{ postId: posts[1].id }}>
-                <p>{posts[1].body}</p>
-                <small>
-                  {posts[1].replies.length} replies · {posts[1].topic}
-                  <ArrowUpRight className="inline ml-2 size-3" />
+            {posts.length > 0 ? (
+              <Link to="/post/$postId" params={{ postId: posts[0].id }}>
+                <p className="mt-3 text-sm line-clamp-3">{posts[0].body}</p>
+                <small className="mt-2 block text-xs text-muted-foreground">
+                  {posts[0].replies.length} replies · #{posts[0].topic.toLowerCase()}
+                  <ArrowUpRight className="inline ml-1 size-3.5 text-primary" />
                 </small>
               </Link>
             ) : (
-              <p>Nothing here right now. Check back for fresh thoughts.</p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                No conversations right now. Share a thought to start the dialogue!
+              </p>
             )}
           </section>
         </div>
