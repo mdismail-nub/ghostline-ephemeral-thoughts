@@ -408,12 +408,15 @@ export function ProfilePage() {
   return (
     <>
       <main className="feed-column">
-        <PageHeading title="Your profile" subtitle="Your posts and replies in this session." />
+        <PageHeading
+          title="Your profile"
+          subtitle="Your active thoughts and replies across the community."
+        />
         <div className="profile-summary">
           <CuteAvatar alias={alias} size="lg" />
           <div>
             <h2>{alias}</h2>
-            <p>Session-only pseudonym</p>
+            <p>Anonymous pseudonym</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-3 my-5">

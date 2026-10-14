@@ -88,8 +88,8 @@ export function Onboarding() {
               Skip for now
             </Button>
           </div>
-          <p className="prototype-note">
-            Session-only preview. No account or permanent storage is connected.
+          <p className="prototype-note text-[11px] text-muted-foreground mt-3">
+            Thoughts vanish strictly after 24 hours. Cute pseudonyms protect your identity.
           </p>
         </div>
       </DialogContent>

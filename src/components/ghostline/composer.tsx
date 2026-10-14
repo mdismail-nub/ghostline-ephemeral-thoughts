@@ -67,7 +67,7 @@ export function Composer({
           <CuteAvatar alias={alias} size="sm" showSparkle={false} />
           <div className="min-w-0">
             <span className="composer-user-alias">{alias}</span>
-            <span className="composer-sub-alias">Session-only preview</span>
+            <span className="composer-sub-alias">Anonymous pseudonym</span>
           </div>
         </div>
 
@@ -212,7 +212,7 @@ export function ComposeDialog() {
       <DialogContent className="compose-dialog-modal">
         <DialogTitle className="text-xl font-bold">Write a post</DialogTitle>
         <DialogDescription className="text-sm text-muted-foreground">
-          Saved for this open session only.
+          Disappears automatically after 24 hours.
         </DialogDescription>
         <div className="mt-4">
           <Composer expanded onDone={() => setCompose(false)} />

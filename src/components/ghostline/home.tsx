@@ -44,22 +44,49 @@ export function HomeFeed() {
               {t}
             </Button>
           ))}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="filter-button" aria-label="Filter feed by topic">
-                {topic}
-                <ChevronDown />
+          <div className="ml-auto flex items-center gap-1.5 min-w-0">
+            {topic !== "All topics" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTopic("All topics")}
+                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0"
+                title="Show all topics"
+              >
+                Clear
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {["All topics", ...topics.map((t) => t.name)].map((t) => (
-                <DropdownMenuItem key={t} onSelect={() => setTopic(t)}>
-                  {t}
-                  {topic === t && <Check className="ml-auto" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={`filter-button text-xs gap-1.5 h-8.5 px-3 rounded-lg border transition-colors ${
+                    topic !== "All topics"
+                      ? "bg-accent/80 text-primary-ink border-primary/20 font-semibold"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                  aria-label="Filter feed by topic"
+                >
+                  <span className="truncate max-w-[120px] sm:max-w-[160px]">
+                    {topic === "All topics" ? "All topics" : `#${topic.toLowerCase()}`}
+                  </span>
+                  <ChevronDown className="size-3.5 shrink-0 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 max-h-72 overflow-y-auto">
+                {["All topics", ...topics.map((t) => t.name)].map((t) => (
+                  <DropdownMenuItem
+                    key={t}
+                    onSelect={() => setTopic(t)}
+                    className="text-xs cursor-pointer"
+                  >
+                    <span>{t === "All topics" ? "All topics" : `#${t.toLowerCase()}`}</span>
+                    {topic === t && <Check className="ml-auto size-3.5 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         <div className="post-list" role="tabpanel" aria-label={`${tab} conversations`}>
           {!ready ? (

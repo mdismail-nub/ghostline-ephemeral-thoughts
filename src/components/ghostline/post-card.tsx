@@ -134,21 +134,21 @@ export function PostCard({ post, detail = false }: PostCardProps) {
     <article className="post-card group transition-all duration-200">
       {/* Card Header */}
       <div className="post-top">
-        <div className="flex min-w-0 items-center gap-3">
-          <CuteAvatar alias={post.alias} size="md" />
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="post-alias">{post.alias}</span>
-              {isOwner && <span className="author-badge">You</span>}
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3 flex-1">
+          <CuteAvatar alias={post.alias} size="md" className="shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="post-alias truncate">{post.alias}</span>
+              {isOwner && <span className="author-badge shrink-0">You</span>}
             </div>
-            <p className="post-time">
+            <p className="post-time truncate">
               {relativeTime(post.createdAt, now)}
               {post.isEdited && <span className="ml-1 opacity-75 text-[11px]">· edited</span>}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Expiration Indicator (Live Countdown) */}
           <span
             className={`expiry inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium tabular-nums transition-colors ${
@@ -435,7 +435,7 @@ export function PostCard({ post, detail = false }: PostCardProps) {
             <span className="text-xs font-medium">Share</span>
           </Button>
         </div>
-        <span className="text-[11px] text-muted-foreground/70 font-medium ml-auto hidden xs:inline">
+        <span className="text-[11px] text-muted-foreground/70 font-medium ml-auto hidden sm:inline shrink-0">
           24h ephemeral
         </span>
       </div>

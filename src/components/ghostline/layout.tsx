@@ -159,7 +159,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{alias}</DropdownMenuLabel>
               <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                Session-only preview
+                Anonymous pseudonym
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -219,16 +219,33 @@ export function Layout({ children }: { children: ReactNode }) {
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setSearchOpen(true)}>
                 <Search />
-                Search
+                <span>Search</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setAlertsOpen(true)}>
+                <Bell />
+                <span>Privacy alerts</span>
+                {unreadAlertCount > 0 && (
+                  <span className="ml-auto text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded-full">
+                    {unreadAlertCount}
+                  </span>
+                )}
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setOnboard(true)} className="cursor-pointer">
                 <Sparkles className="text-primary" />
                 <span>Welcome tour</span>
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="cursor-pointer"
+              >
+                {theme === "dark" ? <Sun /> : <Moon />}
+                <span>Switch to {theme === "dark" ? "light" : "dark"} mode</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/settings">
                   <Settings />
-                  Settings
+                  <span>Settings & privacy</span>
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -312,46 +329,104 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 export function Rightbar() {
   const { posts, setTopic } = useGhost();
-  const trending = discoveryTopics
-    .map((t) => ({ ...t, count: posts.filter((p) => p.topic === t.name).length }))
+  const withCounts = discoveryTopics.map((t) => ({
+    ...t,
+    count: posts.filter((p) => p.topic === t.name).length,
+  }));
+  const activeTrending = withCounts
     .filter((t) => t.count > 0)
     .sort((a, b) => b.count - a.count)
     .slice(0, 4);
+
+  const displayTopics = activeTrending.length >= 2 ? activeTrending : withCounts.slice(0, 4);
+
   return (
-    <aside className="rightbar">
-      <section className="right-section">
-        <h2 className="section-title">
-          <TrendingUp />
-          Active topics
-        </h2>
-        {trending.length ? (
-          trending.map((t) => (
-            <Link key={t.name} to="/" onClick={() => setTopic(t.name)} className="trending-topic">
-              <span className="topic-icon lavender">
-                <TopicIcon name={t.name} />
-              </span>
-              <div>
-                <h3>{t.name}</h3>
-                <p>
-                  {t.count} conversation{t.count === 1 ? "" : "s"}
-                </p>
-              </div>
-              <ArrowUpRight />
+    <aside className="rightbar" aria-label="Discovery & Community">
+      <div className="rightbar-inner">
+        {/* Daily Question Spotlight */}
+        <section className="rightbar-card rightbar-daily-question">
+          <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300 font-bold text-xs uppercase tracking-wider mb-1.5">
+            <Sparkles className="size-3.5 text-primary-ink dark:text-primary" />
+            <span>Today's Reflection</span>
+          </div>
+          <h3 className="text-sm font-bold text-foreground leading-snug">
+            What’s a small thing that made your day better?
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1 mb-3 leading-relaxed">
+            Share a kind reflection or a cozy win with the community.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full text-xs font-semibold rounded-xl gap-1.5 h-8 bg-card/90 hover:bg-card border-border/80 text-foreground"
+            asChild
+          >
+            <Link to="/" onClick={() => setTopic("Daily Question")}>
+              <span>Join conversation</span>
+              <ArrowRight className="size-3" />
             </Link>
-          ))
-        ) : (
-          <p className="muted-copy">A fresh start. Find a topic you like.</p>
-        )}
-        <Button variant="link" asChild className="view-all">
-          <Link to="/explore">
-            Explore topics
-            <ArrowRight />
-          </Link>
-        </Button>
-      </section>
-      <div className="right-footer">
-        <Link to="/settings">Privacy & preferences</Link>
-        <p>Unsaid · Some things are easier to say anonymously</p>
+          </Button>
+        </section>
+
+        {/* Active Topics Card */}
+        <section className="rightbar-card">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="section-title text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <TrendingUp className="size-3.5 text-primary" />
+              <span>Active Topics</span>
+            </h2>
+            <Link
+              to="/explore"
+              className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-0.5"
+            >
+              <span>Explore</span>
+              <ArrowRight className="size-3" />
+            </Link>
+          </div>
+
+          <div className="space-y-1.5">
+            {displayTopics.map((t) => (
+              <Link
+                key={t.name}
+                to="/"
+                onClick={() => setTopic(t.name)}
+                className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-muted/70 transition-colors group text-decoration-none"
+              >
+                <span
+                  className={`topic-icon ${t.tone || "lavender"} size-7 rounded-lg shrink-0 flex items-center justify-center`}
+                >
+                  <TopicIcon name={t.name} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                    #{t.name.toLowerCase()}
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {t.count ? `${t.count} thought${t.count === 1 ? "" : "s"}` : t.description}
+                  </p>
+                </div>
+                <ArrowUpRight className="size-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Cozy Ephemeral & Privacy Card */}
+        <section className="rightbar-card rightbar-privacy-card">
+          <div className="flex items-center gap-1.5 mb-1.5 text-foreground">
+            <ShieldAlert className="size-3.5 text-primary" />
+            <span className="text-xs font-bold">24-Hour Ephemeral</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            All thoughts vanish strictly after 24 hours. Cute pseudonyms protect your identity.
+          </p>
+          <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-border/60 text-[11px]">
+            <Link to="/settings" className="text-primary hover:underline font-medium">
+              Privacy settings
+            </Link>
+            <span className="text-muted-foreground/80">Unsaid</span>
+          </div>
+        </section>
       </div>
     </aside>
   );
