@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { Post, PrivacyAlert, ReactionKind } from "@/types/ghostline";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import type { Post, PrivacyAlert, Reaction, ReactionKind, Reply } from "@/types/ghostline";
 import { makePost, seedPosts, isActive, validBody } from "@/lib/services/mock";
 import {
   getStoredOrNewAlias,
@@ -10,6 +10,9 @@ import {
 import {
   subscribeToPosts,
   createFirestorePost,
+  toggleFirestoreReaction,
+  toggleFirestoreReplyLike,
+  normalizePostForUser,
   updateFirestoreReactions,
   addFirestoreReply,
   updateFirestoreReplies,
@@ -82,19 +85,21 @@ export function GhostProvider({ children }: { children: ReactNode }) {
   const [alerts, setAlerts] = useState<PrivacyAlert[]>([]);
   const [activeAlertModal, setActiveAlertModal] = useState<PrivacyAlert | null>(null);
   const [notifiedAlertIds, setNotifiedAlertIds] = useState<Set<string>>(new Set());
+  const creatorIdRef = useRef<string>("");
 
   useEffect(() => {
     const time = Date.now();
     setNow(time);
-
-    // Initial placeholder thoughts while Firestore connects
-    setPosts(seedPosts(time));
 
     const storedAlias = getStoredOrNewAlias();
     setAliasState(storedAlias);
 
     const storedCreatorId = getStoredOrNewCreatorId();
     setCreatorId(storedCreatorId);
+    creatorIdRef.current = storedCreatorId;
+
+    // Initial placeholder thoughts while Firestore connects, normalized for current device
+    setPosts(seedPosts(time).map((p) => normalizePostForUser(p, storedCreatorId)));
 
     setOnboard(
       localStorage.getItem("unsaid-onboarded") !== "yes" &&
@@ -112,13 +117,14 @@ export function GhostProvider({ children }: { children: ReactNode }) {
       .then((user) => {
         if (user?.uid) {
           setCreatorId(user.uid);
+          creatorIdRef.current = user.uid;
         }
       })
       .catch((err) => {
         console.warn("Anonymous auth initial failure:", err);
       });
 
-    // Real-time Firestore subscription: works across all users, browsers, and refreshes on Vercel
+    // Real-time Firestore subscription: works across all users, browsers, and devices in real time
     const unsubPosts = subscribeToPosts(
       (remotePosts) => {
         setPosts(remotePosts);
@@ -128,6 +134,7 @@ export function GhostProvider({ children }: { children: ReactNode }) {
         console.warn("Firestore listener error, keeping seed posts:", err);
         setReady(true);
       },
+      () => creatorIdRef.current || auth.currentUser?.uid || getStoredOrNewCreatorId(),
     );
 
     const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -137,6 +144,14 @@ export function GhostProvider({ children }: { children: ReactNode }) {
       clearInterval(interval);
     };
   }, []);
+
+  // When creatorId updates, ensure all rendered posts re-evaluate their local selected states
+  useEffect(() => {
+    creatorIdRef.current = creatorId;
+    if (creatorId) {
+      setPosts((prev) => prev.map((p) => normalizePostForUser(p, creatorId)));
+    }
+  }, [creatorId]);
 
   // Listen to privacy alerts for the current post creator
   useEffect(() => {
@@ -230,32 +245,55 @@ export function GhostProvider({ children }: { children: ReactNode }) {
   const react = (id: string, kind: ReactionKind) => {
     const time = Date.now();
     setNow(time);
+    const effectiveUserId =
+      auth.currentUser?.uid || creatorIdRef.current || creatorId || getStoredOrNewCreatorId();
 
-    let updatedPostReactions: Post["reactions"] | null = null;
-
+    // 1. Instant optimistic update for smooth responsive UI on this device
     setPosts((p) =>
       p.map((x) => {
         if (x.id !== id || !isActive(x, time)) return x;
         const currentTarget = x.reactions.find((r) => r.kind === kind);
-        const willSelect = !currentTarget?.selected;
-        const updated = x.reactions.map((r) => {
+        const users = Array.isArray(currentTarget?.users) ? currentTarget!.users : [];
+        const isCurrentlySelected = Boolean(
+          currentTarget?.selected || users.includes(effectiveUserId),
+        );
+        const willSelect = !isCurrentlySelected;
+
+        const updated: Reaction[] = x.reactions.map((r) => {
+          let rUsers = Array.isArray(r.users) ? [...r.users] : [];
+          const baseCount =
+            typeof r.baseCount === "number" ? r.baseCount : rUsers.length === 0 ? r.count || 0 : 0;
+
           if (r.kind === kind) {
+            if (willSelect) {
+              if (!rUsers.includes(effectiveUserId)) rUsers.push(effectiveUserId);
+            } else {
+              rUsers = rUsers.filter((u) => u !== effectiveUserId);
+            }
+            const count = Math.max(0, baseCount + rUsers.length);
             return {
               ...r,
-              count: willSelect ? r.count + 1 : Math.max(0, r.count - 1),
+              users: rUsers,
+              baseCount,
+              count,
               selected: willSelect,
             };
-          }
-          if (willSelect && r.selected) {
+          } else {
+            // Love and dislike are mutually exclusive on Unsaid
+            if (willSelect) {
+              rUsers = rUsers.filter((u) => u !== effectiveUserId);
+            }
+            const count = Math.max(0, baseCount + rUsers.length);
             return {
               ...r,
-              count: Math.max(0, r.count - 1),
+              users: rUsers,
+              baseCount,
+              count,
               selected: false,
             };
           }
-          return r;
         });
-        updatedPostReactions = updated;
+
         return {
           ...x,
           reactions: updated,
@@ -263,11 +301,10 @@ export function GhostProvider({ children }: { children: ReactNode }) {
       }),
     );
 
-    if (updatedPostReactions) {
-      updateFirestoreReactions(id, updatedPostReactions).catch((err) => {
-        console.warn("Firestore reaction sync warning:", err);
-      });
-    }
+    // 2. Real-time atomic sync to Firestore across all devices
+    toggleFirestoreReaction(id, effectiveUserId, kind).catch((err) => {
+      console.warn("Firestore reaction sync warning:", err);
+    });
   };
 
   const reply = (id: string, body: string) => {
@@ -276,13 +313,15 @@ export function GhostProvider({ children }: { children: ReactNode }) {
     if (!validBody(body) || !parent || !isActive(parent, time)) return false;
     setNow(time);
 
-    const newReply = {
+    const newReply: Reply = {
       id: crypto.randomUUID(),
       alias,
       body: body.trim(),
       createdAt: time,
       likes: 0,
       liked: false,
+      likedUsers: [],
+      baseLikes: 0,
     };
 
     setPosts((p) =>
@@ -307,22 +346,40 @@ export function GhostProvider({ children }: { children: ReactNode }) {
   const reactReply = (postId: string, replyId: string) => {
     const time = Date.now();
     setNow(time);
+    const effectiveUserId =
+      auth.currentUser?.uid || creatorIdRef.current || creatorId || getStoredOrNewCreatorId();
 
-    let updatedRepliesForPost: Post["replies"] | null = null;
-
+    // 1. Instant optimistic update
     setPosts((p) =>
       p.map((post) => {
         if (post.id !== postId || !isActive(post, time)) return post;
         const nextReplies = post.replies.map((r) => {
           if (r.id !== replyId) return r;
-          const willLike = !r.liked;
+          let likedUsers = Array.isArray(r.likedUsers) ? [...r.likedUsers] : [];
+          const isCurrentlyLiked = Boolean(r.liked || likedUsers.includes(effectiveUserId));
+          const willLike = !isCurrentlyLiked;
+          const baseLikes =
+            typeof r.baseLikes === "number"
+              ? r.baseLikes
+              : likedUsers.length === 0
+                ? r.likes || 0
+                : 0;
+
+          if (willLike) {
+            if (!likedUsers.includes(effectiveUserId)) likedUsers.push(effectiveUserId);
+          } else {
+            likedUsers = likedUsers.filter((u) => u !== effectiveUserId);
+          }
+          const likes = Math.max(0, baseLikes + likedUsers.length);
           return {
             ...r,
             liked: willLike,
-            likes: willLike ? (r.likes || 0) + 1 : Math.max(0, (r.likes || 0) - 1),
+            likes,
+            likedUsers,
+            baseLikes,
           };
         });
-        updatedRepliesForPost = nextReplies;
+
         return {
           ...post,
           replies: nextReplies,
@@ -330,11 +387,10 @@ export function GhostProvider({ children }: { children: ReactNode }) {
       }),
     );
 
-    if (updatedRepliesForPost) {
-      updateFirestoreReplies(postId, updatedRepliesForPost).catch((err) => {
-        console.warn("Firestore reply like sync warning:", err);
-      });
-    }
+    // 2. Real-time atomic sync to Firestore across all devices
+    toggleFirestoreReplyLike(postId, replyId, effectiveUserId).catch((err) => {
+      console.warn("Firestore reply like sync warning:", err);
+    });
   };
 
   const block = (s: string) => {

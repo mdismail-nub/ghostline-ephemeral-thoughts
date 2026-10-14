@@ -7,7 +7,9 @@ export type ReactionKind = "love" | "dislike" | "heart" | "relate";
 export interface Reaction {
   kind: ReactionKind;
   count: number;
-  selected: boolean;
+  selected?: boolean;
+  users?: string[];
+  baseCount?: number;
 }
 export interface Reply {
   id: string;
@@ -16,6 +18,8 @@ export interface Reply {
   createdAt: number;
   likes?: number;
   liked?: boolean;
+  likedUsers?: string[];
+  baseLikes?: number;
 }
 export interface Post {
   id: string;

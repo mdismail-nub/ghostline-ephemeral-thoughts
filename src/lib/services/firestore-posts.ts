@@ -9,13 +9,78 @@ import {
   query,
   orderBy,
   limit,
+  runTransaction,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { Post, PrivacyAlert, Reaction, Reply } from "@/types/ghostline";
+import type { Post, PrivacyAlert, Reaction, ReactionKind, Reply } from "@/types/ghostline";
 import { seedPosts } from "@/lib/services/mock";
 
 const POSTS_COLL = "posts";
 const ALERTS_COLL = "alerts";
+
+/**
+ * Normalizes a post from Firestore into the representation for the local user/device.
+ * It computes the correct reaction count and whether THIS user/device has selected the reaction,
+ * so each device independently tracks its own love / dislike status while seeing real-time
+ * counts from all other devices.
+ */
+export function normalizePostForUser(rawPost: Post, currentUserId: string): Post {
+  const rawReactions = Array.isArray(rawPost.reactions) ? rawPost.reactions : [];
+  const kinds: ReactionKind[] = ["love", "dislike"];
+
+  const reactions: Reaction[] = kinds.map((kind) => {
+    const existing = rawReactions.find(
+      (r) => r.kind === kind || (kind === "love" && r.kind === "heart"),
+    );
+    const users: string[] = Array.isArray(existing?.users) ? existing!.users : [];
+    const hasMyReaction = Boolean(currentUserId && users.includes(currentUserId));
+
+    // If baseCount is set, use it; otherwise fallback to existing count if no users array yet
+    const baseCount =
+      typeof existing?.baseCount === "number"
+        ? existing.baseCount
+        : users.length === 0
+          ? existing?.count || 0
+          : 0;
+
+    const count = users.length > 0 ? baseCount + users.length : (existing?.count ?? baseCount);
+
+    return {
+      kind,
+      count: Math.max(0, count),
+      users,
+      baseCount,
+      selected: hasMyReaction,
+    };
+  });
+
+  const rawReplies = Array.isArray(rawPost.replies) ? rawPost.replies : [];
+  const replies: Reply[] = rawReplies.map((rep) => {
+    const likedUsers: string[] = Array.isArray(rep.likedUsers) ? rep.likedUsers : [];
+    const isLikedByMe = Boolean(currentUserId && likedUsers.includes(currentUserId));
+    const baseLikes =
+      typeof rep.baseLikes === "number"
+        ? rep.baseLikes
+        : likedUsers.length === 0
+          ? rep.likes || 0
+          : 0;
+    const likes = likedUsers.length > 0 ? baseLikes + likedUsers.length : (rep.likes ?? baseLikes);
+
+    return {
+      ...rep,
+      likes: Math.max(0, likes),
+      likedUsers,
+      baseLikes,
+      liked: isLikedByMe,
+    };
+  });
+
+  return {
+    ...rawPost,
+    reactions,
+    replies,
+  };
+}
 
 /**
  * Subscribe in real-time to posts from Firestore.
@@ -25,6 +90,7 @@ const ALERTS_COLL = "alerts";
 export function subscribeToPosts(
   onData: (posts: Post[]) => void,
   onError?: (error: Error) => void,
+  getCurrentUserId?: () => string,
 ) {
   const postsRef = collection(db, POSTS_COLL);
   const q = query(postsRef, orderBy("createdAt", "desc"), limit(100));
@@ -34,6 +100,8 @@ export function subscribeToPosts(
   const unsubscribe = onSnapshot(
     q,
     async (snapshot) => {
+      const currentUserId = getCurrentUserId ? getCurrentUserId() : "";
+
       // If collection is empty on first load, seed with initial welcome post
       if (snapshot.empty) {
         if (!initialized) {
@@ -47,7 +115,7 @@ export function subscribeToPosts(
             console.warn("Seeding initial post error:", err);
           }
         }
-        onData(seedPosts(Date.now()));
+        onData(seedPosts(Date.now()).map((p) => normalizePostForUser(p, currentUserId)));
         return;
       }
 
@@ -71,12 +139,12 @@ export function subscribeToPosts(
           continue;
         }
 
-        results.push(data);
+        results.push(normalizePostForUser(data, currentUserId));
       }
 
       // If all posts in Firestore are expired or deleted, show welcome seed post
       if (results.length === 0) {
-        onData(seedPosts(Date.now()));
+        onData(seedPosts(Date.now()).map((p) => normalizePostForUser(p, currentUserId)));
       } else {
         onData(results);
       }
@@ -107,7 +175,216 @@ export async function createFirestorePost(post: Post): Promise<void> {
 }
 
 /**
- * Update reactions on a post in Firestore
+ * Atomically toggle a reaction (love or dislike) on a post in Firestore.
+ * Ensures cross-device consistency and prevents one user from overwriting another's reaction.
+ */
+export async function toggleFirestoreReaction(
+  postId: string,
+  userId: string,
+  kind: ReactionKind,
+): Promise<{ success: boolean; reactions?: Reaction[] }> {
+  if (!postId || !userId) return { success: false };
+
+  const postRef = doc(db, POSTS_COLL, postId);
+
+  try {
+    const updatedReactions = await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(postRef);
+      if (!snap.exists()) {
+        throw new Error(`Post ${postId} not found`);
+      }
+      const data = snap.data() as Post;
+      const existingReactions = Array.isArray(data.reactions) ? data.reactions : [];
+
+      const reactionKinds: ReactionKind[] = ["love", "dislike"];
+      const baseReactions = reactionKinds.map((k) => {
+        const found = existingReactions.find(
+          (r) => r.kind === k || (k === "love" && r.kind === "heart"),
+        );
+        if (found) {
+          const users = Array.isArray(found.users) ? [...found.users] : [];
+          const baseCount =
+            typeof found.baseCount === "number"
+              ? found.baseCount
+              : users.length === 0
+                ? found.count || 0
+                : 0;
+          return {
+            kind: k,
+            users,
+            baseCount,
+            count: users.length > 0 ? baseCount + users.length : found.count || baseCount,
+          };
+        }
+        return { kind: k, users: [], baseCount: 0, count: 0 };
+      });
+
+      const target = baseReactions.find((r) => r.kind === kind);
+      const isAlreadyReacted = target ? target.users.includes(userId) : false;
+
+      const newReactions: Reaction[] = baseReactions.map((r) => {
+        let users = [...r.users];
+        if (r.kind === kind) {
+          if (isAlreadyReacted) {
+            // User unselected this reaction
+            users = users.filter((u) => u !== userId);
+          } else {
+            // User selected this reaction
+            if (!users.includes(userId)) {
+              users.push(userId);
+            }
+          }
+        } else {
+          // Love and dislike are mutually exclusive on Unsaid
+          users = users.filter((u) => u !== userId);
+        }
+
+        const count = Math.max(0, (r.baseCount || 0) + users.length);
+        return {
+          kind: r.kind,
+          count,
+          users,
+          baseCount: r.baseCount || 0,
+        };
+      });
+
+      transaction.update(postRef, { reactions: newReactions });
+      return newReactions;
+    });
+
+    return { success: true, reactions: updatedReactions };
+  } catch (err) {
+    console.warn("Transactional reaction update failed, attempting direct update:", err);
+    try {
+      const snap = await getDoc(postRef);
+      if (snap.exists()) {
+        const data = snap.data() as Post;
+        const currentReactions = Array.isArray(data.reactions) ? data.reactions : [];
+        const nextReactions: Reaction[] = ["love" as const, "dislike" as const].map((k) => {
+          const found = currentReactions.find(
+            (r) => r.kind === k || (k === "love" && r.kind === "heart"),
+          );
+          let users = Array.isArray(found?.users) ? [...found!.users] : [];
+          const baseCount =
+            typeof found?.baseCount === "number"
+              ? found.baseCount
+              : users.length === 0
+                ? found?.count || 0
+                : 0;
+          if (k === kind) {
+            if (users.includes(userId)) {
+              users = users.filter((u) => u !== userId);
+            } else {
+              users.push(userId);
+            }
+          } else {
+            users = users.filter((u) => u !== userId);
+          }
+          return {
+            kind: k,
+            users,
+            baseCount,
+            count: Math.max(0, baseCount + users.length),
+          };
+        });
+        await updateDoc(postRef, { reactions: nextReactions });
+        return { success: true, reactions: nextReactions };
+      }
+    } catch (fallbackErr) {
+      console.error("Direct reaction update also failed:", fallbackErr);
+    }
+    return { success: false };
+  }
+}
+
+/**
+ * Atomically toggle a like on a reply in Firestore across all devices.
+ */
+export async function toggleFirestoreReplyLike(
+  postId: string,
+  replyId: string,
+  userId: string,
+): Promise<{ success: boolean; replies?: Reply[] }> {
+  if (!postId || !replyId || !userId) return { success: false };
+
+  const postRef = doc(db, POSTS_COLL, postId);
+
+  try {
+    const updatedReplies = await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(postRef);
+      if (!snap.exists()) throw new Error(`Post ${postId} not found`);
+      const post = snap.data() as Post;
+      const replies = Array.isArray(post.replies) ? post.replies : [];
+
+      const nextReplies: Reply[] = replies.map((rep) => {
+        if (rep.id !== replyId) return rep;
+        let likedUsers = Array.isArray(rep.likedUsers) ? [...rep.likedUsers] : [];
+        const baseLikes =
+          typeof rep.baseLikes === "number"
+            ? rep.baseLikes
+            : likedUsers.length === 0
+              ? rep.likes || 0
+              : 0;
+
+        if (likedUsers.includes(userId)) {
+          likedUsers = likedUsers.filter((u) => u !== userId);
+        } else {
+          likedUsers.push(userId);
+        }
+        const likes = Math.max(0, baseLikes + likedUsers.length);
+        return {
+          ...rep,
+          likedUsers,
+          baseLikes,
+          likes,
+        };
+      });
+
+      transaction.update(postRef, { replies: nextReplies });
+      return nextReplies;
+    });
+
+    return { success: true, replies: updatedReplies };
+  } catch (err) {
+    console.warn("Transactional reply like failed, attempting direct update:", err);
+    try {
+      const snap = await getDoc(postRef);
+      if (snap.exists()) {
+        const post = snap.data() as Post;
+        const replies = Array.isArray(post.replies) ? post.replies : [];
+        const nextReplies = replies.map((rep) => {
+          if (rep.id !== replyId) return rep;
+          let likedUsers = Array.isArray(rep.likedUsers) ? [...rep.likedUsers] : [];
+          const baseLikes =
+            typeof rep.baseLikes === "number"
+              ? rep.baseLikes
+              : likedUsers.length === 0
+                ? rep.likes || 0
+                : 0;
+          if (likedUsers.includes(userId)) {
+            likedUsers = likedUsers.filter((u) => u !== userId);
+          } else {
+            likedUsers.push(userId);
+          }
+          return {
+            ...rep,
+            likedUsers,
+            baseLikes,
+            likes: Math.max(0, baseLikes + likedUsers.length),
+          };
+        });
+        await updateDoc(postRef, { replies: nextReplies });
+        return { success: true, replies: nextReplies };
+      }
+    } catch (fallbackErr) {
+      console.error("Direct reply like fallback failed:", fallbackErr);
+    }
+    return { success: false };
+  }
+}
+
+/**
+ * Update reactions on a post in Firestore (fallback helper)
  */
 export async function updateFirestoreReactions(
   postId: string,
