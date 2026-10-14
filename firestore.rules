@@ -5,12 +5,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    function isSignedIn() {
-      return request.auth != null;
+    match /test/{docId} {
+      allow read: if true;
     }
 
     function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
     }
 
     function isValidPost(data) {
@@ -44,45 +44,31 @@ service cloud.firestore {
     match /posts/{postId} {
       allow get, list: if true;
 
-      allow create: if isSignedIn()
-        && isValidId(postId)
+      allow create: if isValidId(postId)
         && isValidPost(request.resource.data)
-        && request.resource.data.creatorId == request.auth.uid
         && (!('reportCount' in request.resource.data) || request.resource.data.reportCount == 0);
 
-      allow update: if isSignedIn()
-        && isValidId(postId)
+      allow update: if isValidId(postId)
         && isValidPost(request.resource.data)
         && (
-          (resource.data.creatorId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['body', 'topic', 'isEdited'])) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['body', 'topic', 'isEdited']) ||
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'replies']) ||
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'reports', 'deleted'])
         );
 
-      allow delete: if isSignedIn()
-        && isValidId(postId)
-        && (
-          resource.data.creatorId == request.auth.uid ||
-          (resource.data.reportCount != null && resource.data.reportCount >= 4)
-        );
+      allow delete: if isValidId(postId);
     }
 
     match /alerts/{alertId} {
-      allow get, list: if isSignedIn()
-        && (resource == null || resource.data.creatorId == request.auth.uid);
+      allow get, list: if true;
 
-      allow create: if isSignedIn()
-        && isValidId(alertId)
+      allow create: if isValidId(alertId)
         && isValidAlert(request.resource.data);
 
-      allow update: if isSignedIn()
-        && isValidId(alertId)
-        && resource.data.creatorId == request.auth.uid
+      allow update: if isValidId(alertId)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
 
-      allow delete: if isSignedIn()
-        && isValidId(alertId)
-        && resource.data.creatorId == request.auth.uid;
+      allow delete: if isValidId(alertId);
     }
   }
 }

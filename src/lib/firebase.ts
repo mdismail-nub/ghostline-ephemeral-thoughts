@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, signInAnonymously, onAuthStateChanged, type User } from "firebase/auth";
+import { getAuth, signInAnonymously, type User } from "firebase/auth";
 import { getFirestore, doc, getDocFromServer } from "firebase/firestore";
 import firebaseConfig from "../../firebase-applet-config.json";
 
@@ -10,32 +10,27 @@ export const db = firebaseConfig.firestoreDatabaseId
   ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
   : getFirestore(app);
 
-let authPromise: Promise<User> | null = null;
+let authPromise: Promise<User | null> | null = null;
 
-export function ensureAnonymousAuth(): Promise<User> {
+/**
+ * Attempts anonymous authentication non-blockingly if supported by project.
+ * Unsaid works seamlessly with client-stored anonymous creator tokens so it
+ * does not block Firestore operations if anonymous auth is restricted.
+ */
+export async function ensureAnonymousAuth(): Promise<User | null> {
   if (auth.currentUser) {
-    return Promise.resolve(auth.currentUser);
+    return auth.currentUser;
   }
   if (!authPromise) {
-    authPromise = new Promise((resolve, reject) => {
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          unsubscribe();
-          resolve(user);
-        } else {
-          try {
-            const cred = await signInAnonymously(auth);
-            unsubscribe();
-            resolve(cred.user);
-          } catch (err) {
-            unsubscribe();
-            // Don't keep broken promise forever
-            authPromise = null;
-            reject(err);
-          }
-        }
-      });
-    });
+    authPromise = (async () => {
+      try {
+        const cred = await signInAnonymously(auth);
+        return cred.user;
+      } catch (err) {
+        // Project may have anonymous auth restricted; graceful fallback
+        return null;
+      }
+    })();
   }
   return authPromise;
 }

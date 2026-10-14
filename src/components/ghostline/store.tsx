@@ -212,7 +212,7 @@ export function GhostProvider({ children }: { children: ReactNode }) {
     if (!validBody(body)) return false;
     const time = Date.now();
     setNow(time);
-    const effectiveCreatorId = auth.currentUser?.uid || creatorId;
+    const effectiveCreatorId = auth.currentUser?.uid || creatorId || getStoredOrNewCreatorId();
     const newPost = makePost(body, t, time, alias, effectiveCreatorId);
 
     // Optimistic local update

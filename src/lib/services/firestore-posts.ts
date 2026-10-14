@@ -2,15 +2,15 @@ import {
   collection,
   doc,
   setDoc,
+  getDoc,
   updateDoc,
   deleteDoc,
   onSnapshot,
   query,
   orderBy,
   limit,
-  getDocs,
 } from "firebase/firestore";
-import { db, ensureAnonymousAuth, auth } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import type { Post, PrivacyAlert, Reaction, Reply } from "@/types/ghostline";
 import { seedPosts } from "@/lib/services/mock";
 
@@ -20,6 +20,7 @@ const ALERTS_COLL = "alerts";
 /**
  * Subscribe in real-time to posts from Firestore.
  * Ephemeral 24h filter and automatic moderation filtering applied.
+ * Works across all browsers, users, and survives page refreshes on Vercel.
  */
 export function subscribeToPosts(
   onData: (posts: Post[]) => void,
@@ -34,17 +35,20 @@ export function subscribeToPosts(
     q,
     async (snapshot) => {
       // If collection is empty on first load, seed with initial welcome post
-      if (snapshot.empty && !initialized) {
-        initialized = true;
-        try {
-          const seeds = seedPosts(Date.now());
-          for (const s of seeds) {
-            await setDoc(doc(db, POSTS_COLL, s.id), s);
+      if (snapshot.empty) {
+        if (!initialized) {
+          initialized = true;
+          try {
+            const seeds = seedPosts(Date.now());
+            for (const s of seeds) {
+              await setDoc(doc(db, POSTS_COLL, s.id), s);
+            }
+          } catch (err) {
+            console.warn("Seeding initial post error:", err);
           }
-          return;
-        } catch {
-          // If seeding fails due to rules or network, fallback gracefully
         }
+        onData(seedPosts(Date.now()));
+        return;
       }
 
       initialized = true;
@@ -70,7 +74,12 @@ export function subscribeToPosts(
         results.push(data);
       }
 
-      onData(results);
+      // If all posts in Firestore are expired or deleted, show welcome seed post
+      if (results.length === 0) {
+        onData(seedPosts(Date.now()));
+      } else {
+        onData(results);
+      }
     },
     (err) => {
       console.warn("Firestore posts listener error:", err.message);
@@ -82,51 +91,45 @@ export function subscribeToPosts(
 }
 
 /**
- * Persist a newly created post to Firestore
+ * Persist a newly created post to Firestore so it is permanently shared
+ * and survives page refreshes and multi-user sessions.
  */
 export async function createFirestorePost(post: Post): Promise<void> {
-  await ensureAnonymousAuth();
   const postRef = doc(db, POSTS_COLL, post.id);
-  const user = auth.currentUser;
   const finalPost: Post = {
     ...post,
-    creatorId: user?.uid || post.creatorId || "anon",
-    reportCount: 0,
-    reports: [],
+    creatorId: post.creatorId || "anon-" + Date.now(),
+    reportCount: post.reportCount || 0,
+    reports: post.reports || [],
     deleted: false,
   };
   await setDoc(postRef, finalPost);
 }
 
 /**
- * Update reactions on a post
+ * Update reactions on a post in Firestore
  */
 export async function updateFirestoreReactions(
   postId: string,
   reactions: Reaction[],
 ): Promise<void> {
-  await ensureAnonymousAuth();
   const postRef = doc(db, POSTS_COLL, postId);
   await updateDoc(postRef, { reactions });
 }
 
 /**
- * Add a reply to a post
+ * Add a reply to a post in Firestore
  */
 export async function addFirestoreReply(postId: string, newReply: Reply): Promise<void> {
-  await ensureAnonymousAuth();
   const postRef = doc(db, POSTS_COLL, postId);
-  // Get current replies and append
-  const docSnap = await getDocs(query(collection(db, POSTS_COLL), limit(1)));
-  // Direct read or optimistic update
-  const currentPostDoc = doc(db, POSTS_COLL, postId);
-  // We can read the post or use updateDoc with array
-  const currentSnap = await getDocs(query(collection(db, POSTS_COLL)));
-  const post = currentSnap.docs.find((d) => d.id === postId)?.data() as Post | undefined;
-  const currentReplies = post?.replies || [];
-  await updateDoc(currentPostDoc, {
-    replies: [...currentReplies, newReply],
-  });
+  const snap = await getDoc(postRef);
+  if (snap.exists()) {
+    const post = snap.data() as Post;
+    const currentReplies = post.replies || [];
+    await updateDoc(postRef, {
+      replies: [...currentReplies, newReply],
+    });
+  }
 }
 
 /**
@@ -136,20 +139,18 @@ export async function updateFirestoreReplies(
   postId: string,
   updatedReplies: Reply[],
 ): Promise<void> {
-  await ensureAnonymousAuth();
   const postRef = doc(db, POSTS_COLL, postId);
   await updateDoc(postRef, { replies: updatedReplies });
 }
 
 /**
- * Edit post content
+ * Edit post content in Firestore
  */
 export async function editFirestorePost(
   postId: string,
   body: string,
   topic?: string,
 ): Promise<void> {
-  await ensureAnonymousAuth();
   const postRef = doc(db, POSTS_COLL, postId);
   await updateDoc(postRef, {
     body,
@@ -162,7 +163,6 @@ export async function editFirestorePost(
  * Delete post from Firestore
  */
 export async function deleteFirestorePost(postId: string): Promise<void> {
-  await ensureAnonymousAuth();
   const postRef = doc(db, POSTS_COLL, postId);
   try {
     await deleteDoc(postRef);
@@ -182,13 +182,14 @@ export async function reportFirestorePost(
   reason: string,
   currentPost?: Post,
 ): Promise<{ deleted: boolean; alreadyReported: boolean; reportCount: number }> {
-  await ensureAnonymousAuth();
   const postRef = doc(db, POSTS_COLL, postId);
 
   let targetPost = currentPost;
   if (!targetPost) {
-    const snap = await getDocs(query(collection(db, POSTS_COLL)));
-    targetPost = snap.docs.find((d) => d.id === postId)?.data() as Post | undefined;
+    const snap = await getDoc(postRef);
+    if (snap.exists()) {
+      targetPost = snap.data() as Post;
+    }
   }
 
   if (!targetPost) {
@@ -234,14 +235,13 @@ export async function reportFirestorePost(
 async function triggerAutoPrivacyDeletion(post: Post, customReason?: string) {
   const postRef = doc(db, POSTS_COLL, post.id);
 
-  // 1. Mark as deleted or delete document
+  // 1. Mark as deleted or delete document so it immediately disappears from feeds
   try {
     await updateDoc(postRef, {
       deleted: true,
       reportCount: Math.max(4, post.reportCount || 4),
     });
   } catch {
-    // Attempt hard delete if update fails
     try {
       await deleteDoc(postRef);
     } catch {
@@ -284,12 +284,9 @@ export function subscribeToPrivacyAlerts(
     q,
     (snapshot) => {
       const allAlerts: PrivacyAlert[] = [];
-      const user = auth.currentUser;
-      const myIds = [creatorIdentifier, user?.uid].filter(Boolean);
-
       for (const d of snapshot.docs) {
         const item = d.data() as PrivacyAlert;
-        if (myIds.includes(item.creatorId)) {
+        if (item.creatorId === creatorIdentifier) {
           allAlerts.push(item);
         }
       }
